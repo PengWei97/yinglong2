@@ -39,7 +39,7 @@ LEVEL_SET                   := no
 MISC                        := no
 NAVIER_STOKES               := no
 PERIDYNAMICS                := no
-PHASE_FIELD                 := no
+PHASE_FIELD                 := yes
 POROUS_FLOW                 := no
 RAY_TRACING                 := no
 REACTOR                     := no
@@ -47,7 +47,7 @@ RDG                         := no
 RICHARDS                    := no
 STOCHASTIC_TOOLS            := no
 THERMAL_HYDRAULICS          := no
-TENSOR_MECHANICS            := no
+TENSOR_MECHANICS            := yes
 XFEM                        := no
 
 include $(MOOSE_DIR)/modules/modules.mk
