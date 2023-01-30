@@ -235,12 +235,13 @@ GBAnisotropyMOP1::computerModelParameter()
         a_0 = a_star;
         kappa_star = a_0 * _wGB * _sigma[m][n];
         g2 = _sigma[m][n] * _sigma[m][n] / (kappa_star * _mu_qp);
-        y = -5.288 * g2 * g2 * g2 * g2 - 0.09364 * g2 * g2 * g2 + 9.965 * g2 * g2 - 8.183 * g2 +
-            2.007;
-        gamma_star = 1 / y;
+        // y = -5.288 * g2 * g2 * g2 * g2 - 0.09364 * g2 * g2 * g2 + 9.965 * g2 * g2 - 8.183 * g2 + 2.007; // MOOSE-old
+        y = -3.0944 * g2 * g2 * g2 * g2 - 1.8169 * g2 * g2 * g2 + 10.323 * g2 * g2 - 8.1819 * g2 + 2.0033;
+        gamma_star = 1 / y; // MD2022-old
         yyy = y * y * y;
-        f_interf = 0.05676 * yyy * yyy - 0.2924 * yyy * y * y + 0.6367 * yyy * y - 0.7749 * yyy +
-                   0.6107 * y * y - 0.4324 * y + 0.2792;
+        // f_interf = 0.05676 * yyy * yyy - 0.2924 * yyy * y * y + 0.6367 * yyy * y - 0.7749 * yyy +
+        //            0.6107 * y * y - 0.4324 * y + 0.2792; // MOOSE-old
+        f_interf = 0.078815 * yyy * yyy - 0.49546 * yyy * y * y + 1.2244 * yyy * y - 1.5281 * yyy + 1.0686 * y * y - 0.55631 * y + 0.29067; // MD2022-old
         a_star = std::sqrt(f_interf / g2);
       }
 
