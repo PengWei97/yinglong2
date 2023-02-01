@@ -8,7 +8,12 @@ InputParameters
 yinglongApp::validParams()
 {
   InputParameters params = MooseApp::validParams();
-
+  
+  // Do not use legacy material output, i.e., output properties on INITIAL as well as TIMESTEP_END
+  params.set<bool>("use_legacy_material_output") = false;
+  params.set<bool>("use_legacy_uo_aux_computation") = false;
+  params.set<bool>("use_legacy_output_syntax") = false;
+  
   return params;
 }
 
@@ -27,6 +32,8 @@ yinglongApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax)
   Registry::registerActionsTo(af, {"yinglongApp"});
 
   /* register custom execute flags, action syntax, etc. here */
+  syntax.registerActionSyntax("PolycrystalKernelMOP2Action", "Kernels/PolycrystalKernelMOP2");
+
 }
 
 void
