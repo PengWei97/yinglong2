@@ -187,14 +187,18 @@ GBAnisotropyMOP2::computerModelParameter()
     {
       g2 = _sigma[m][n] * _sigma[m][n] / (_kappa_qp * _mu_qp);
 
-      y = -3.0944 * g2 * g2 * g2 * g2 - 1.81694 * g2 * g2 * g2 + 10.323 * g2 * g2 - 8.1819 * g2 + 2.0033;
+      y = -5.288 * g2 * g2 * g2 * g2 - 0.09364 * g2 * g2 * g2 + 9.965 * g2 * g2 - 8.183 * g2 + 2.007; // MOOSE
+      // y = -3.0944 * g2 * g2 * g2 * g2 - 1.81694 * g2 * g2 * g2 + 10.323 * g2 * g2 - 8.1819 * g2 + 2.0033; // MD2022
 
       _gamma_ij[_qp][m][n] = 1 / y; 
       _gamma_ij[_qp][n][m] = 1 / y;
 
       _L_kappa[m][n] = _sigma[m][n] * _mob[m][n] / _kappa_qp; 
       yyy = y * y * y;
-      f_interf = 0.078815 * yyy * yyy - 0.49546 * yyy * y * y + 1.2244 * yyy * y - 1.5281 * yyy + 1.0686 * y * y - 0.55631 * y + 0.29067;
+
+      f_interf = 0.05676 * yyy * yyy - 0.2924 * yyy * y * y + 0.6367 * yyy * y - 0.7749 * yyy + .6107 * y * y - 0.4324 * y + 0.2792; // MOOSE
+      // f_interf = 0.078815 * yyy * yyy - 0.49546 * yyy * y * y + 1.2244 * yyy * y - 1.5281 * yyy + 1.0686 * y * y - 0.55631 * y + 0.29067; // MD2022
+      
       _wGB_g2[m][n] = std::sqrt(_kappa_qp/(_mu_qp * f_interf));
       _wGB_g2[n][m] = g2;
     }  
