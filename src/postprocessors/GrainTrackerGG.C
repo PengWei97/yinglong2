@@ -816,6 +816,8 @@ GrainTrackerGG::trackGrains()
       }
     }
 
+    createAdjacentIDVector(); // by weipeng
+
     // Case 2 (inactive grains in _feature_sets_old)
     for (auto & grain : _feature_sets_old)
     {
@@ -861,6 +863,31 @@ GrainTrackerGG::trackGrains()
               "Error: New grain detected and \"error_on_new_grain_creation\" is set to true");
         else
           newGrainCreated(new_id);
+      }
+    }
+  }
+}
+
+void 
+GrainTrackerGG::createAdjacentIDVector() // by weipeng
+{
+
+  for (const auto grain_num_i : index_range(_feature_sets)) 
+  {
+    auto & grain_i = _feature_sets[grain_num_i];
+
+    if (grain_i._status == Status::INACTIVE)
+      continue;
+
+    for (const auto grain_num_j : index_range(_feature_sets))
+    {
+      auto & grain_j = _feature_sets[grain_num_j];
+
+      if (grain_i._id < grain_j._id && grain_j._status != Status::INACTIVE 
+          && grain_i.boundingBoxesIntersect(grain_j) && grain_i.halosIntersect(grain_j))
+      {
+        grain_i._adjacent_id.push_back(grain_num_j); // It must be noted that the number stored in _adjacent_id is _feature_sets[i], 
+        grain_j._adjacent_id.push_back(grain_num_i); // and the ID of the adjacent grain is _feature_sets[i]._id
       }
     }
   }
