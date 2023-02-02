@@ -2,8 +2,7 @@
 
 #include "GBAnisotropy1MisAngBase.h"
 #include "MooseMesh.h"
-
-#include <fstream>
+#include <cmath>
 
 registerMooseObject("yinglongApp", GBAnisotropy1MisAngBase);
 
@@ -12,18 +11,28 @@ GBAnisotropy1MisAngBase::validParams()
 {
   InputParameters params = Material::validParams();
   params.addCoupledVar("T", 300.0, "Temperature in Kelvin");
+  params.addRequiredParam<UserObjectName>(
+      "grain_tracker", "Name of GrainTrackerGG user object that provides Grain ID according to element ID");
+  params.addRequiredParam<UserObjectName>("euler_angle_provider",
+                                          "Name of Euler angle provider user object");
   params.addParam<Real>("length_scale", 1.0e-9, "Length scale in m, where default is nm");
   params.addParam<Real>("time_scale", 1.0e-9, "Time scale in s, where default is ns");
+  params.addParam<Real>("matrix_sigma", 0.5, "Matrix GB energy in J/m^2");
+  params.addParam<Real>("matrix_mob", 2.5e-6, "Matrix GB mobility prefactor in m^4/(J*s)");
+  params.addParam<Real>("matrix_Q", 0.23, "Matrix Migration energy in eV");
   params.addRequiredParam<Real>("wGB", "Diffuse GB width in nm");
   params.addParam<Real>(
       "delta_sigma", 0.1, "factor determining inclination dependence of GB energy");
   params.addParam<Real>(
       "delta_mob", 0.1, "factor determining inclination dependence of GB mobility");
-  params.addRequiredParam<FileName>("Anisotropic_GB_file_name",
-                                    "Name of the file containing: 1)GB mobility prefactor; 2) GB "
-                                    "migration activation energy; 3)GB energy");
-  params.addRequiredParam<bool>("inclination_anisotropy",
+  params.addParam<bool>("inclination_anisotropy", false,
+                                "The GB anisotropy would be considered if true");
+  params.addParam<bool>("misorientation_anisotropy", true,
                                 "The GB anisotropy inclination would be considered if true");
+  params.addParam<bool>("gbMobility_anisotropy", false,
+                                "The GB mobility anisotropy would be considered if true");
+  params.addParam<bool>("tb_anisotropy", false,
+                                "The twin boundary anisotropy would be considered if true");
   params.addRequiredCoupledVarWithAutoBuild(
       "v", "var_name_base", "op_num", "Array of coupled variables");
   return params;
@@ -31,18 +40,27 @@ GBAnisotropy1MisAngBase::validParams()
 
 GBAnisotropy1MisAngBase::GBAnisotropy1MisAngBase(const InputParameters & parameters)
   : Material(parameters),
+    _grain_tracker(getUserObject<GrainTrackerGG>("grain_tracker")),
+    _euler(getUserObject<EulerAngleProvider>("euler_angle_provider")),
+    _is_primary(processor_id() == 0),
     _mesh_dimension(_mesh.dimension()),
     _length_scale(getParam<Real>("length_scale")),
     _time_scale(getParam<Real>("time_scale")),
+    _matrix_sigma(getParam<Real>("matrix_sigma")),
+    _matrix_mob(getParam<Real>("matrix_mob")),
+    _matrix_Q(getParam<Real>("matrix_Q")),
     _delta_sigma(getParam<Real>("delta_sigma")),
     _delta_mob(getParam<Real>("delta_mob")),
-    _Anisotropic_GB_file_name(getParam<FileName>("Anisotropic_GB_file_name")),
     _inclination_anisotropy(getParam<bool>("inclination_anisotropy")),
+    _misorientation_anisotropy(getParam<bool>("misorientation_anisotropy")),
+    _gbMobility_anisotropy(getParam<bool>("gbMobility_anisotropy")),
+    _tb_anisotropy(getParam<bool>("tb_anisotropy")),
     _T(coupledValue("T")),
     _kappa(declareProperty<Real>("kappa_op")),
     _gamma(declareProperty<Real>("gamma_asymm")),
     _L(declareProperty<Real>("L")),
     _mu(declareProperty<Real>("mu")),
+    _misAngle(declareProperty<Real>("misAngle")),
     _act_wGB(declareProperty<Real>("act_wGB")),
     _kb(8.617343e-5),      // Boltzmann constant in eV/K
     _JtoeV(6.24150974e18), // Joule to eV conversion
@@ -52,6 +70,11 @@ GBAnisotropy1MisAngBase::GBAnisotropy1MisAngBase(const InputParameters & paramet
     _grad_vals(coupledGradients("v")),
     _wGB(getParam<Real>("wGB"))
 {
+  // Initialize _s_misoriTwin
+  _s_misoriTwin.misor = -1.0;
+  _s_misoriTwin.isTwinning = false;
+  _s_misoriTwin.twinType = "none";
+
   // reshape vectors
   _sigma.resize(_op_num);
   _mob.resize(_op_num);
@@ -70,9 +93,36 @@ GBAnisotropy1MisAngBase::GBAnisotropy1MisAngBase(const InputParameters & paramet
 }
 
 void
-GBAnisotropy1MisAngBase::computeQpProperties()
+GBAnisotropy1MisAngBase::computeQpProperties( )
 {
-  getGBAnisotropyFromFile();
+  for (unsigned int i = 0; i < _op_num; ++i)
+  {
+    std::vector<Real> row_sigma;
+    std::vector<Real> row_mob;
+    std::vector<Real> row_Q;
+
+    for (unsigned int j = 0; j < _op_num; ++j)
+    {
+      row_sigma.push_back(_matrix_sigma);
+      row_mob.push_back(_matrix_mob);
+      row_Q.push_back(_matrix_Q);
+    }
+
+    _sigma[i] = row_sigma; // unit: J/m^2 GB energy
+    _mob[i] = row_mob; // unit: m^4/(J*s) GB mobility
+    _Q[i] = row_Q; // unit: eV
+  }
+  _misAngle[_qp] = 0.0;
+
+  computerGBParameter();
+
+  // for (unsigned int m = 0; m < _op_num - 1; ++m)
+  //   for (unsigned int n = m + 1; n < _op_num; ++n)
+  //   {
+  //     std::cout << "_sigma[" << m << "][" << n << "]" << _sigma[m][n] << std::endl;
+  //     std::cout << "_mob[" << m << "][" << n << "]" << _mob[m][n] << std::endl;
+  //   }
+  // std::cout << "*************" << std::endl;
 
   computerModelParameter();
 
@@ -134,43 +184,66 @@ GBAnisotropy1MisAngBase::computeQpProperties()
   _L[_qp] = sum_L / sum_val;
   _mu[_qp] = _mu_qp;
 
-  _act_wGB[_qp] = 0.5e-9 / _length_scale;                     // 0.5 nm
+  _act_wGB[_qp] = 0.5e-9 / _length_scale; 
 }
 
-
 void 
-GBAnisotropy1MisAngBase::getGBAnisotropyFromFile()
+GBAnisotropy1MisAngBase::computerGBParameter()
 {
-  // Read in data from "Anisotropic_GB_file_name"
-  std::ifstream inFile(_Anisotropic_GB_file_name.c_str());
+  // get the GB location based on the grainTrackerGG in the quadrature point
+  const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
 
-  if (!inFile)
-    paramError("Anisotropic_GB_file_name", "Can't open GB anisotropy input file");
+  std::vector<unsigned int> orderParameterIndex; // Create a vector of order parameter indices
+  std::vector<unsigned int> grainIDIndex; // Create a vector of grain IDs  
 
-  for (unsigned int i = 0; i < 2; ++i)
-    inFile.ignore(255, '\n'); // ignore line
-
-  Real data;
-  for (unsigned int i = 0; i < 3 * _op_num; ++i)
+  for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index)
   {
-    std::vector<Real> row; // create an empty row of double values
-    for (unsigned int j = 0; j < _op_num; ++j)
-    {
-      inFile >> data;
-      row.push_back(data);
-    }
+    auto grain_id = op_to_grains[op_index]; // grain id
 
-    if (i < _op_num)
-      _sigma[i] = row; // unit: J/m^2
+    if (grain_id == FeatureFloodCount::invalid_id)
+      continue;
 
-    else if (i < 2 * _op_num)
-      _mob[i - _op_num] = row; // unit: m^4/(J*s)
-
-    else
-      _Q[i - 2 * _op_num] = row; // unit: eV
+    orderParameterIndex.push_back(op_index);
+    grainIDIndex.push_back(grain_id);
   }
 
-  inFile.close();
+ if (_misorientation_anisotropy && grainIDIndex.size() > 1) // at gb boundary or junction
+  {
+
+
+    for (unsigned int i = 0; i < grainIDIndex.size() - 1; ++i)
+      for (unsigned int j = i+1; j < grainIDIndex.size(); ++j)
+      {
+        auto angles_i = _euler.getEulerAngles(grainIDIndex[i]);
+        auto angles_j = _euler.getEulerAngles(grainIDIndex[j]);
+        _s_misoriTwin = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _s_misoriTwin, "hcp");
+
+        if (grainIDIndex.size() == 2)
+          _misAngle[_qp] =  _s_misoriTwin.misor;
+
+        if (_s_misoriTwin.misor > 1.0)
+          _sigma[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBEnergy(_s_misoriTwin);
+
+        if (_gbMobility_anisotropy && _s_misoriTwin.misor > 1.0)
+          _mob[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBMobility(_s_misoriTwin);
+
+        _sigma[orderParameterIndex[j]][orderParameterIndex[i]] =  _sigma[orderParameterIndex[i]][orderParameterIndex[j]];
+        _mob[orderParameterIndex[j]][orderParameterIndex[i]] =  _mob[orderParameterIndex[i]][orderParameterIndex[j]];
+      }    
+  }
+  
+}
+
+Real
+GBAnisotropy1MisAngBase::calculatedGBEnergy(const misoriAngle_isTwining & misori_gbType)
+{
+  return _matrix_sigma;
+}
+
+Real
+GBAnisotropy1MisAngBase::calculatedGBMobility(const misoriAngle_isTwining & misori_gbType)
+{
+  return _matrix_mob;
 }
 
 void
