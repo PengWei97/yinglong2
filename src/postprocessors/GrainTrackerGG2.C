@@ -337,7 +337,8 @@ GrainTrackerGG2::trackGrains()
         // Must be a nucleating grain (status is still not set)
         if (grain._status == Status::CLEAR)
         {
-          auto new_index = getNextUniqueID();
+          // auto new_index = getNextUniqueID();
+          auto new_index = getAdjacentID(grain); // by weipeng          
           grain._id = new_index;          // Set the ID
           grain._status = Status::MARKED; // Mark it
 
@@ -352,6 +353,9 @@ GrainTrackerGG2::trackGrains()
     }
 
     createAdjacentIDVector(); // by weipeng
+
+    if (_remerge_grains && _t_step > 2) // by weipeng
+      mergeGrainsBasedMisorientation();
 
     // Case 2 (inactive grains in _feature_sets_old)
     for (auto & grain : _feature_sets_old)
@@ -476,6 +480,11 @@ GrainTrackerGG2::remapGrains()
              */
             grain1._var_index = grain2._var_index;
             grain1._status |= Status::DIRTY;
+
+            if (_remerge_grains)  // by weipeng
+              grain_id_to_new_var.emplace_hint(
+                  grain_id_to_new_var.end(),
+                  std::pair<unsigned int, std::size_t>(grain1._id, grain1._var_index));
           }
         }
       }
