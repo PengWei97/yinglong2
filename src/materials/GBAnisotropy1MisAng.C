@@ -15,9 +15,6 @@ GBAnisotropy1MisAng::validParams()
   params.addParam<Real>("length_scale", 1.0e-9, "Length scale in m, where default is nm");
   params.addParam<Real>("time_scale", 1.0e-9, "Time scale in s, where default is ns");
   params.addRequiredParam<Real>("wGB", "Diffuse GB width in nm");
-  params.addParam<Real>("molar_volume_value",
-                        7.11e-6,
-                        "molar volume of material in m^3/mol, by default it's the value of copper");
   params.addParam<Real>(
       "delta_sigma", 0.1, "factor determining inclination dependence of GB energy");
   params.addParam<Real>(
@@ -37,7 +34,6 @@ GBAnisotropy1MisAng::GBAnisotropy1MisAng(const InputParameters & parameters)
     _mesh_dimension(_mesh.dimension()),
     _length_scale(getParam<Real>("length_scale")),
     _time_scale(getParam<Real>("time_scale")),
-    _M_V(getParam<Real>("molar_volume_value")),
     _delta_sigma(getParam<Real>("delta_sigma")),
     _delta_mob(getParam<Real>("delta_mob")),
     _Anisotropic_GB_file_name(getParam<FileName>("Anisotropic_GB_file_name")),
@@ -47,8 +43,6 @@ GBAnisotropy1MisAng::GBAnisotropy1MisAng(const InputParameters & parameters)
     _gamma(declareProperty<Real>("gamma_asymm")),
     _L(declareProperty<Real>("L")),
     _mu(declareProperty<Real>("mu")),
-    _molar_volume(declareProperty<Real>("molar_volume")),
-    _entropy_diff(declareProperty<Real>("entropy_diff")),
     _act_wGB(declareProperty<Real>("act_wGB")),
     _kb(8.617343e-5),      // Boltzmann constant in eV/K
     _JtoeV(6.24150974e18), // Joule to eV conversion
@@ -140,9 +134,6 @@ GBAnisotropy1MisAng::computeQpProperties()
   _L[_qp] = sum_L / sum_val;
   _mu[_qp] = _mu_qp;
 
-  _molar_volume[_qp] =
-      _M_V / (_length_scale * _length_scale * _length_scale); // m^3/mol converted to ls^3/mol
-  _entropy_diff[_qp] = 9.5 * _JtoeV;                          // J/(K mol) converted to eV(K mol)
   _act_wGB[_qp] = 0.5e-9 / _length_scale;                     // 0.5 nm
 }
 

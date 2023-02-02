@@ -30,7 +30,6 @@ protected:
 
   const Real _length_scale;
   const Real _time_scale;
-  const Real _M_V;
   const Real _delta_sigma;
   const Real _delta_mob;
   const Real _wGB;
@@ -52,9 +51,7 @@ protected:
   MaterialProperty<Real> & _L;
   MaterialProperty<Real> & _mu;
 
-  MaterialProperty<Real> & _molar_volume;
-  MaterialProperty<Real> & _entropy_diff;
-  MaterialProperty<Real> & _act_wGB;
+  MaterialProperty<Real> & _act_wGB; // needless 
 
   const Real _kb;
   const Real _JtoeV;
