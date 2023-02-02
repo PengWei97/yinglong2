@@ -2,7 +2,7 @@
 
 #include "Material.h"
 
-// GBAnisotropy1MisAng -- This version of GB energy and GB mobility anisotropy is introduced by the txt file.
+// GBAnisotropy1MisAngBase -- This version of GB energy and GB mobility anisotropy is introduced by the txt file.
 
 /**
  * Function[kappa, gamma, m, L] = parameters (sigma, mob, w_GB, sigma0)
@@ -10,12 +10,12 @@
  * Thanks to Prof. Moelans for the explanation of her paper.
  */
 
-class GBAnisotropy1MisAng : public Material
+class GBAnisotropy1MisAngBase : public Material
 {
 public:
   static InputParameters validParams();
 
-  GBAnisotropy1MisAng(const InputParameters & parameters);
+  GBAnisotropy1MisAngBase(const InputParameters & parameters);
 
 protected:
   virtual void computeQpProperties();

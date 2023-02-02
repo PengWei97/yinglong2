@@ -1,14 +1,14 @@
 #pragma once
 
-#include "GBAnisotropy1MisAng.h"
+#include "GBAnisotropy1MisAngBase.h"
 #include "MooseMesh.h"
 
 #include <fstream>
 
-registerMooseObject("yinglongApp", GBAnisotropy1MisAng);
+registerMooseObject("yinglongApp", GBAnisotropy1MisAngBase);
 
 InputParameters
-GBAnisotropy1MisAng::validParams()
+GBAnisotropy1MisAngBase::validParams()
 {
   InputParameters params = Material::validParams();
   params.addCoupledVar("T", 300.0, "Temperature in Kelvin");
@@ -29,7 +29,7 @@ GBAnisotropy1MisAng::validParams()
   return params;
 }
 
-GBAnisotropy1MisAng::GBAnisotropy1MisAng(const InputParameters & parameters)
+GBAnisotropy1MisAngBase::GBAnisotropy1MisAngBase(const InputParameters & parameters)
   : Material(parameters),
     _mesh_dimension(_mesh.dimension()),
     _length_scale(getParam<Real>("length_scale")),
@@ -70,7 +70,7 @@ GBAnisotropy1MisAng::GBAnisotropy1MisAng(const InputParameters & parameters)
 }
 
 void
-GBAnisotropy1MisAng::computeQpProperties()
+GBAnisotropy1MisAngBase::computeQpProperties()
 {
   getGBAnisotropyFromFile();
 
@@ -139,7 +139,7 @@ GBAnisotropy1MisAng::computeQpProperties()
 
 
 void 
-GBAnisotropy1MisAng::getGBAnisotropyFromFile()
+GBAnisotropy1MisAngBase::getGBAnisotropyFromFile()
 {
   // Read in data from "Anisotropic_GB_file_name"
   std::ifstream inFile(_Anisotropic_GB_file_name.c_str());
@@ -174,7 +174,7 @@ GBAnisotropy1MisAng::getGBAnisotropyFromFile()
 }
 
 void
-GBAnisotropy1MisAng::computerModelParameter()
+GBAnisotropy1MisAngBase::computerModelParameter()
 {
   Real sigma_init;
   Real g2 = 0.0;
