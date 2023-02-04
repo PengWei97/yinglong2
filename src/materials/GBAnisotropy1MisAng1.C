@@ -26,12 +26,14 @@ GBAnisotropy1MisAng1::GBAnisotropy1MisAng1(const InputParameters & parameters)
 Real
 GBAnisotropy1MisAng1::calculatedGBEnergy(const misoriAngle_isTwining & misori_gbType)
 {
-   const Real B = 5;
-   const Real n = 4;
-   Real gbSigma = _matrix_sigma; 
+  const Real B = 5;
+  const Real n = 4;
+  Real gbSigma = _matrix_sigma; 
 
-   if (!_tb_anisotropy || !misori_gbType.isTwinning)
-      gbSigma = _GBsigma_HAB * ((misori_gbType.misor / _delta_theta_HAB * (1 - std::log(misori_gbType.misor / _delta_theta_HAB)))); // Eq.7
+  if ((misori_gbType.misor < _delta_theta_HAB) && !_tb_anisotropy || !misori_gbType.isTwinning)
+    gbSigma = _GBsigma_HAB * (misori_gbType.misor / _delta_theta_HAB * (1 - std::log(misori_gbType.misor / _delta_theta_HAB) )); // Eq.7
+  else
+    gbSigma = _GBsigma_HAB;
 
   return gbSigma;
 }
@@ -43,8 +45,10 @@ GBAnisotropy1MisAng1::calculatedGBMobility(const misoriAngle_isTwining & misori_
    const Real n = 4;
    Real gbMob = _matrix_mob; 
 
-   if (!_tb_anisotropy || !misori_gbType.isTwinning)
+   if ((misori_gbType.misor < _delta_theta_HAB) && !_tb_anisotropy || !misori_gbType.isTwinning)
       gbMob = _GBmob_HAB * ((1- std::exp(-B * std::pow( misori_gbType.misor / _delta_theta_HAB, n)))); // Eq.8
+    else
+      gbMob = _GBmob_HAB;
 
   return gbMob;
 }
