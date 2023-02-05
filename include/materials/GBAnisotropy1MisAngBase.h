@@ -71,11 +71,13 @@ protected:
   MaterialProperty<Real> & _L;
   MaterialProperty<Real> & _mu;
   MaterialProperty<Real> & _misAngle;
+  MaterialProperty<Real> & _twType; // needless 
 
   MaterialProperty<Real> & _act_wGB; // needless 
 
   const Real _kb;
   const Real _JtoeV;
+  const Real _degree;
   Real _mu_qp;
 
   const unsigned int _op_num;
