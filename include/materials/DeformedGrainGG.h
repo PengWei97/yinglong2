@@ -37,10 +37,7 @@ protected:
   const Real _length_scale;
   const Real _int_width;
   const Real _time_scale;
-  const Real _GBMobility;
-
-  /// the GB Energy
-  const Real _GBE;
+  // const Real _GBMobility;
 
   /// the average dislocation density
   const Real _Disloc_Den;
@@ -50,12 +47,6 @@ protected:
 
   /// the Length of Burger's Vector
   const Real _Burg_vec;
-
-  /// the same parameters that appear in the original grain growth model
-  MaterialProperty<Real> & _kappa;
-  MaterialProperty<Real> & _gamma;
-  MaterialProperty<Real> & _L;
-  MaterialProperty<Real> & _mu;
 
   /// the prefactor needed to calculate the deformation energy from dislocation density
   MaterialProperty<Real> & _beta;
@@ -69,13 +60,10 @@ protected:
   /// the deformation energy
   MaterialProperty<Real> & _Def_Eng;
 
-  // Constants
-
   /// number of deformed grains
   const unsigned int _deformed_grain_num;
 
   /// Grain tracker object
   const GrainTrackerInterface & _grain_tracker;
-  const Real _kb;
   const Real _JtoeV;
 };
