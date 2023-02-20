@@ -217,7 +217,7 @@ GBAnisotropy1MisAngBase::computerGBParameter()
       {
         auto angles_i = _euler.getEulerAngles(grainIDIndex[i]);
         auto angles_j = _euler.getEulerAngles(grainIDIndex[j]);
-        _s_misoriTwin = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _s_misoriTwin, "hcp", _degree);
+        _s_misoriTwin = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _s_misoriTwin, "hcp");
 
         if (grainIDIndex.size() == 2)
         {
@@ -231,10 +231,10 @@ GBAnisotropy1MisAngBase::computerGBParameter()
           }
         }
 
-        if (_s_misoriTwin.misor > 1.0)
+        if (_s_misoriTwin.misor > 0.1)
           _sigma[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBEnergy(_s_misoriTwin);
 
-        if (_gbMobility_anisotropy && _s_misoriTwin.misor > 1.0)
+        if (_gbMobility_anisotropy && _s_misoriTwin.misor > 0.1)
           _mob[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBMobility(_s_misoriTwin);
 
         _sigma[orderParameterIndex[j]][orderParameterIndex[i]] =  _sigma[orderParameterIndex[i]][orderParameterIndex[j]];
