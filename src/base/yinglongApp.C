@@ -33,6 +33,7 @@ yinglongApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax)
 
   /* register custom execute flags, action syntax, etc. here */
   syntax.registerActionSyntax("PolycrystalKernelMOP2Action", "Kernels/PolycrystalKernelMOP2");
+  syntax.registerActionSyntax("PolycrystalStoredDeformationEnergyAction", "Kernels/PolycrystalStoredDeformationEnergy");
 
 }
 
