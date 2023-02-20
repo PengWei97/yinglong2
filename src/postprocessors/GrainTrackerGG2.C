@@ -39,6 +39,7 @@ GrainTrackerGG2::trackGrains()
    */
   if (_is_primary)
   {
+    _inactive_grains_id.clear();
     // Reset Status on active unique grains
     std::vector<unsigned int> map_sizes(_maps_size);
     for (auto & grain : _feature_sets_old)
@@ -338,13 +339,14 @@ GrainTrackerGG2::trackGrains()
         if (grain._status == Status::CLEAR)
         {
           // auto new_index = getNextUniqueID();
-          auto new_index = getAdjacentID(grain); // by weipeng          
+          auto new_index = getTopoRelaGrainID(grain); // by weipeng
           grain._id = new_index;          // Set the ID
           grain._status = Status::MARKED; // Mark it
 
           if (_verbosity_level > 0)
             _console << COLOR_YELLOW << "Nucleating Grain Detected "
-                     << " (variable index: " << grain._var_index << ")\n"
+                     << " (variable index: " << grain._var_index 
+                     << ", grain index: " << grain._id << ")\n"
                      << COLOR_DEFAULT;
           if (_verbosity_level > 1)
             _console << grain;
@@ -363,6 +365,8 @@ GrainTrackerGG2::trackGrains()
       if (grain._status == Status::CLEAR)
       {
         grain._status = Status::INACTIVE;
+        _inactive_grains_id.push_back(grain._id);
+
         if (_verbosity_level > 0)
         {
           _console << COLOR_GREEN << "Marking Grain " << grain._id
@@ -373,6 +377,21 @@ GrainTrackerGG2::trackGrains()
         }
       }
     }
+
+    if (_inactive_grains_id.size() > 0)
+      _invalid_feature_map.clear();
+    
+    for (auto & id_grain : _inactive_grains_id)
+      for (auto & grain_old : _feature_sets_old)
+        if (grain_old._id == id_grain && grain_old._adjacent_id.size() > 0)
+        {
+          std::vector<unsigned int> invalid_adjacentID_sort = grain_old._adjacent_id;
+          std::sort(invalid_adjacentID_sort.begin(), invalid_adjacentID_sort.end());
+
+          _invalid_feature_map[invalid_adjacentID_sort].push_back(grain_old._id);
+          _invalid_feature_map[invalid_adjacentID_sort].push_back(grain_old._var_index);
+          break;
+        }
   } // is_primary
 
   /*************************************************************
@@ -683,18 +702,36 @@ GrainTrackerGG2::remapGrains()
 }
 
 unsigned int
-GrainTrackerGG2::getAdjacentID(const FeatureData & grain_i)
+GrainTrackerGG2::getTopoRelaGrainID(const FeatureData & grain_i)
 {
-  for (const auto grain_num_j : index_range(_feature_sets))
-  {
-    auto & grain_j = _feature_sets[grain_num_j];
-
+  std::vector<unsigned int> nucleat_adj_ID;
+  for (auto & grain_j : _feature_sets)
     if (grain_j._status == Status::MARKED && grain_i.boundingBoxesIntersect(grain_j) && grain_i.halosIntersect(grain_j))
-    {
-      return grain_j._id;
-    }
+      nucleat_adj_ID.push_back(grain_j._id);
+
+  std::sort(nucleat_adj_ID.begin(), nucleat_adj_ID.end());
+
+  for (auto & grain_i : nucleat_adj_ID)
+      _console << COLOR_RED << "getTopoRelaGrainID::nucleat_adj_ID: " << grain_i << std::endl;
+
+  std::cout << "***********" << std::endl;
+
+  auto iter = _invalid_feature_map.find(nucleat_adj_ID);
+  if ( iter != _invalid_feature_map.end())
+    return iter->second[0];
+  else if (_feature_sets_old.size() > 0)
+  {
+    for (auto & grain_i : _feature_sets_old)
+      if (nucleat_adj_ID == grain_i._adjacent_id)
+        return grain_i._id;
+  }
+  else if (nucleat_adj_ID.size() > 0)
+  {
+    _console << COLOR_RED << "impart nucleation grains to adjacent grains " << nucleat_adj_ID[0] << std::endl;
+    return nucleat_adj_ID[0];
   }
 
+  // mooseError("Detecting incorrect grain nucleation");
   return 0;
 }
 
@@ -702,6 +739,7 @@ void
 GrainTrackerGG2::mergeGrainsBasedMisorientation()
 {
   Real misor_angle = 0;
+  const Real & threshold_merge = 0.8; 
   
   for (const auto grain_num_i : index_range(_feature_sets))
   {
@@ -719,9 +757,9 @@ GrainTrackerGG2::mergeGrainsBasedMisorientation()
 
       EulerAngles angles_j = _euler.getEulerAngles(grain_j._id);
 
-      misor_angle = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _s_misoriTwin).misor;
+      misor_angle = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _s_misoriTwin, "hcp").misor;
 
-      if (misor_angle < 0.8)
+      if (misor_angle < threshold_merge)
       {
         _console << COLOR_YELLOW << "Grain #" << grain_i._id << " and Grain #" << grain_j._id
                  << " was merged (misor: " << misor_angle << ").\n"
