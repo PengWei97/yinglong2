@@ -67,7 +67,11 @@ DeformedGrainGG::computeQpProperties()
 
     auto grain_id = op_to_grains[op_index];
 
-    rho_i = _GNDs_provider.getAvgData(grain_id)._custom[0]; // GNDs for each grain, 1/m^2 
+    if (grain_id < _GNDs_provider.getAvgDataSize())
+      rho_i = _GNDs_provider.getAvgData(grain_id)._custom[0] * (_length_scale * _length_scale); // GNDs for each grain, 1/m^2 
+    else
+      rho_i = 2.0e15 * (_length_scale * _length_scale);
+
     rho0 += rho_i * (*_vals[op_index])[_qp] * (*_vals[op_index])[_qp];
   }
 
