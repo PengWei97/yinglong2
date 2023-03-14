@@ -2,7 +2,7 @@
 #include "GBAnisotropy1MisAngBase.h"
 #include "LinearInterpolation.h"
 
-// GBAnisotropy1MisAng5 -- This version of the GB energy can be introduced based on an interpolation function, and additionally assumes that the GB mobility is proportional to the GB energy. Meanwhile, add the function to identify and set the energy and mobility of twin boundaries.
+// GBAnisotropy1MisAng5 -- This version of the GB energy anisotropy can be introduced based on an interpolation function, and additionally assumes that the GB mobility is based on the sigmoidal law. Meanwhile, add the function to identify and set the energy and mobility of twin boundaries (TW energy from MD calculation and TW mobility - sigmoidal low)
 
 class GBAnisotropy1MisAng5 : public GBAnisotropy1MisAngBase
 {

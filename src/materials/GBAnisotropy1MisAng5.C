@@ -63,9 +63,9 @@ GBAnisotropy1MisAng5::calculatedGBMobility(const misoriAngle_isTwining & misori_
   if ((misori_gbType.misor < threshold_HAB) && !_tb_anisotropy || !misori_gbType.isTwinning)
     gbMob = _GBmob_HAGB * ((1- std::exp(-B * std::pow( misori_gbType.misor / threshold_HAB, n)))); // Eq.8
   else if (_tb_anisotropy && misori_gbType.twinType == "twin_type0")
-    gbMob = _GBmob_HAGB * _TT1_sigma / _GBsigma_HAGB;
+    gbMob = _GBmob_HAGB * ((1- std::exp(-B * std::pow( 0.3351 / threshold_HAB, n)))); // for TS-TW1
   else if (_tb_anisotropy && misori_gbType.twinType == "twin_type1")
-    gbMob = _GBmob_HAGB * _CT1_sigma / _GBsigma_HAGB;
+    gbMob = _GBmob_HAGB * ((1- std::exp(-B * std::pow( 0.17921 / threshold_HAB, n)))); // for SP-SW1
   else if (misori_gbType.misor >= threshold_HAB)
     gbMob = _GBmob_HAGB;
 
