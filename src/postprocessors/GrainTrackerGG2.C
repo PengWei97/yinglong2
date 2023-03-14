@@ -393,7 +393,6 @@ GrainTrackerGG2::trackGrains()
           break;
         }
   } // is_primary
-
   /*************************************************************
    ****************** COLLECTIVE WORK SECTION ******************
    *************************************************************/
@@ -404,12 +403,13 @@ GrainTrackerGG2::trackGrains()
   // Build up an id to index map
   _communicator.broadcast(_max_curr_grain_id);
   buildFeatureIdToLocalIndices(_max_curr_grain_id);
-
   /**
    * Trigger callback for new grains
    */
   if (_old_max_grain_id < _max_curr_grain_id)
   {
+    _console << "_old_max_grain_id " << _old_max_grain_id << ", _max_curr_grain_id " << _max_curr_grain_id << "\n" << std::endl; 
+
     for (auto new_id = _old_max_grain_id + 1; new_id <= _max_curr_grain_id; ++new_id)
     {
       // Don't trigger the callback on the reserve IDs
@@ -714,7 +714,7 @@ GrainTrackerGG2::getTopoRelaGrainID(const FeatureData & grain_i)
   for (auto & grain_i : nucleat_adj_ID)
       _console << COLOR_RED << "getTopoRelaGrainID::nucleat_adj_ID: " << grain_i << std::endl;
 
-  std::cout << "***********" << std::endl;
+  _console << "***********\n" << std::endl;
 
   auto iter = _invalid_feature_map.find(nucleat_adj_ID);
   if ( iter != _invalid_feature_map.end())
@@ -748,17 +748,26 @@ GrainTrackerGG2::mergeGrainsBasedMisorientation()
 
     auto & grain_i = _feature_sets[grain_num_i];
     EulerAngles angles_i = _euler.getEulerAngles(grain_i._id);
+
     for (const auto grain_num_j : index_range(grain_i._adjacent_id))
     {
+      // if (grain_i._adjacent_id.size() == 0)
+      //   continue;
+      
       auto & grain_j = _feature_sets[grain_i._adjacent_id[grain_num_j]];
+
+      if (grain_j._id > _max_curr_grain_id)
+      {
+        _console << "_max_curr_grain_id " << _max_curr_grain_id << std::endl;
+        _console << ", grain_j " << grain_j._id << std::endl;
+        continue;
+      }
 
       if (grain_j._status == Status::INACTIVE || grain_i._id >= grain_j._id)
         continue;
 
       EulerAngles angles_j = _euler.getEulerAngles(grain_j._id);
-
       misor_angle = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _s_misoriTwin, "hcp").misor;
-
       if (misor_angle < threshold_merge)
       {
         _console << COLOR_YELLOW << "Grain #" << grain_i._id << " and Grain #" << grain_j._id

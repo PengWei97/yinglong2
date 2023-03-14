@@ -236,6 +236,7 @@ GrainTrackerGG::initialize()
     _feature_sets_old.swap(_feature_sets);
   else
   {
+    std::cout << "GrainTrackerGG::initialize()" << std::endl;
     _invalid_feature_map[{0}].push_back(1);
     _invalid_feature_map[{0}].push_back(2);
   }
@@ -892,7 +893,7 @@ GrainTrackerGG::createAdjacentIDVector() // by weipeng
       if (grain_i._id < grain_j._id && grain_j._status != Status::INACTIVE 
           && grain_i.boundingBoxesIntersect(grain_j) && grain_i.halosIntersect(grain_j))
       {
-        grain_i._adjacent_id.push_back(grain_j._id); // It must be noted that the number stored in _adjacent_id is _feature_sets[i], 
+        grain_i._adjacent_id.push_back(grain_j._id); // It must be noted that the number stored in _adjacent_id is _feature_sets[i],
         grain_j._adjacent_id.push_back(grain_i._id); // and the ID of the adjacent grain is _feature_sets[i]._id
       }
     }
