@@ -816,6 +816,8 @@ GrainTrackerBase::trackGrains()
       }
     }
 
+    createAdjacentIDVector();
+
     // Case 2 (inactive grains in _feature_sets_old)
     for (auto & grain : _feature_sets_old)
     {
@@ -863,6 +865,34 @@ GrainTrackerBase::trackGrains()
           newGrainCreated(new_id);
       }
     }
+  }
+}
+
+void 
+GrainTrackerBase::createAdjacentIDVector()
+{
+
+  for (const auto grain_num_i : index_range(_feature_sets)) 
+  {
+    auto & grain_i = _feature_sets[grain_num_i];
+    _grain_id_to_feature_index_map[grain_i._id] = grain_num_i;
+
+    if (grain_i._status == Status::INACTIVE)
+      continue;
+
+    for (const auto grain_num_j : index_range(_feature_sets))
+    {
+      auto & grain_j = _feature_sets[grain_num_j];
+
+      if (grain_i._id < grain_j._id && grain_j._status != Status::INACTIVE 
+          && grain_i.boundingBoxesIntersect(grain_j) && grain_i.halosIntersect(grain_j))
+      {
+        grain_i._adjacent_id.push_back(grain_j._id); // Please note that '_adjacent_id' stores Grain ID, not Feature Index.,
+        grain_j._adjacent_id.push_back(grain_i._id); 
+      }
+    }
+
+    std::sort(grain_i._adjacent_id.begin(), grain_i._adjacent_id.end());
   }
 }
 

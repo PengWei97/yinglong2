@@ -1,3 +1,6 @@
+*.inl
+bm1*.i
+*.bz2
 job*.sh
 .libs
 *.la

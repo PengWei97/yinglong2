@@ -100,6 +100,11 @@ protected:
    */
   void trackGrains();
 
+  // establish the vector of adjacent grains ID based on the topological relationship
+  virtual void createAdjacentIDVector();
+  
+  // This data structure is used to store the map from grain id to Feature index
+  std::map<unsigned int, unsigned int> _grain_id_to_feature_index_map;
   /**
    * This method is called when a new grain is detected. It can be overridden by a derived class to
    * handle setting new properties on the newly created grain.
