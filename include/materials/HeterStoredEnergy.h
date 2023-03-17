@@ -27,6 +27,7 @@ public:
   HeterStoredEnergy(const InputParameters & parameters);
 
 protected:
+  virtual void initQpStatefulProperties() override; // add for initial GNDs
   virtual void computeQpProperties();
 
   const unsigned int _op_num; // total number of grains
@@ -40,6 +41,10 @@ protected:
  
   const GrainTrackerInterface & _grain_tracker; // Grain tracker object
   const EBSDReader & _GNDs_provider;
+  
+  MooseEnum _dataGNDs_name;
+  MaterialProperty<Real> & _GNDs;
+  const MaterialProperty<Real> & _GNDs_old;
   
   MaterialProperty<Real> & _beta;
   MaterialProperty<Real> & _rho_eff; // the average/effective dislocation density

@@ -18,6 +18,7 @@
  * geometrically necessary dislocation densities (GNDs) in EBSD. 
  * The formulation is based on: S. Gentry and K. Thornton, IOP Conf. Series: Materials Science and
  * Engineering 89, 012024, (2015), and other works cited therein.
+ * ACSDDFMPoly -- AC - SD(stored) - DF(deformtaion)
  */
 
 // Forward Declarations

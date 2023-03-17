@@ -501,8 +501,7 @@ GrainTrackerGG2::remapGrains()
             grain1._status |= Status::DIRTY;
 
             if (_remerge_grains)  // by weipeng
-              grain_id_to_new_var.emplace_hint(
-                  grain_id_to_new_var.end(),
+              grain_id_to_new_var.emplace_hint(grain_id_to_new_var.end(),
                   std::pair<unsigned int, std::size_t>(grain1._id, grain1._var_index));
           }
         }

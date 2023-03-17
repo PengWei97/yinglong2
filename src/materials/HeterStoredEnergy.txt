@@ -9,6 +9,7 @@
 
 #include "HeterStoredEnergy.h"
 #include "GrainTrackerInterface.h"
+#include "EBSDReaderPointDataAux.h"
 
 registerMooseObject("yinglongApp", HeterStoredEnergy);
 
@@ -25,6 +26,9 @@ HeterStoredEnergy::validParams()
   params.addRequiredParam<UserObjectName>("grain_tracker",
                                           "The GrainTracker UserObject to get values from.");
   params.addRequiredParam<UserObjectName>("GNDs_provider", "Geometric necessary dislocation densities (GNDs) provider for EBSD reader");
+  MooseEnum field_types = EBSDAccessFunctors::getPointDataFieldType();
+  params.addRequiredParam<MooseEnum>(
+      "dataGNDs_name", field_types, "The data to be extracted from the EBSD data by this AuxKernel");
   return params;
 }
 
@@ -36,11 +40,14 @@ HeterStoredEnergy::HeterStoredEnergy(const InputParameters & parameters)
     _time_scale(getParam<Real>("time_scale")),
     _Elas_Mod(getParam<Real>("Elas_Mod")),
     _Burg_vec(getParam<Real>("Burg_vec")),
+    _GNDs(declareProperty<Real>("GNDs")),
+    _GNDs_old(getMaterialPropertyOld<Real>("GNDs")),
     _beta(declareProperty<Real>("beta")),
     _rho_eff(declareProperty<Real>("rho_eff")),
     _Def_Eng(declareProperty<Real>("Def_Eng")),
     _grain_tracker(getUserObject<GrainTrackerInterface>("grain_tracker")),
-    _GNDs_provider(getUserObject<EBSDReader>("GNDs_provider")),    
+    _GNDs_provider(getUserObject<EBSDReader>("GNDs_provider")), 
+    _dataGNDs_name(getParam<MooseEnum>("dataGNDs_name")),   
     _JtoeV(6.24150974e18) // Joule to eV conversion
 {
   if (_op_num == 0)
@@ -48,8 +55,25 @@ HeterStoredEnergy::HeterStoredEnergy(const InputParameters & parameters)
 }
 
 void
-HeterStoredEnergy::computeQpProperties()
+HeterStoredEnergy::initQpStatefulProperties()
 {
+  Point p = _current_elem->vertex_average();
+
+  // const MooseEnum & data_name = "CUSTOM0";
+  auto _val_GNDs = _GNDs_provider.getPointDataAccessFunctor(_dataGNDs_name);
+  _GNDs[_qp] = (*_val_GNDs)(_GNDs_provider.getData(p));
+
+  if (_GNDs[_qp] == 0)
+    _GNDs[_qp] = 1.0e12;
+}
+
+void
+HeterStoredEnergy::computeQpProperties()
+{ 
+  // concurrent recovery
+  Real _prop_time = _fe_problem.time();
+  _GNDs[_qp] = _GNDs_old[_qp] * (1 - _GNDs_old[_qp] * _prop_time / 3000); // TODO
+
   Real SumEtai2 = 0.0;
   for (unsigned int i = 0; i < _op_num; ++i)
     SumEtai2 += (*_vals[i])[_qp] * (*_vals[i])[_qp];
