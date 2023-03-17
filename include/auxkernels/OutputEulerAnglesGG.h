@@ -11,10 +11,10 @@
 
 #include "AuxKernel.h"
 #include "EulerAngleProvider.h"
-#include "GrainTrackerGG.h"
+#include "GrainTrackerBase.h"
 
 // Forward Declarations
-class GrainTrackerGG;
+class GrainTrackerBase;
 class EulerAngleProvider;
 
 /**
@@ -35,7 +35,7 @@ protected:
   const EulerAngleProvider & _euler;
 
   /// Grain tracker object
-  const GrainTrackerGG & _grain_tracker;
+  const GrainTrackerBase & _grain_tracker;
 
   /// Number of grains
   MooseEnum _output_euler_angle;

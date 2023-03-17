@@ -17,13 +17,13 @@
 class PolycrystalUserObjectBase;
 struct GrainDistance;
 
-class GrainTrackerGG : public FeatureFloodCount, public GrainTrackerInterface
+class GrainTrackerBase : public FeatureFloodCount, public GrainTrackerInterface
 {
 public:
   static InputParameters validParams();
 
-  GrainTrackerGG(const InputParameters & parameters);
-  virtual ~GrainTrackerGG();
+  GrainTrackerBase(const InputParameters & parameters);
+  virtual ~GrainTrackerBase();
 
   virtual void meshChanged() override;
   virtual void initialize() override;
@@ -99,9 +99,6 @@ protected:
    * This method should only be called on the root processor
    */
   void trackGrains();
-
-  // establish the vector of adjacent grains based on the topological relationship by weipeng
-  virtual void createAdjacentIDVector();
 
   /**
    * This method is called when a new grain is detected. It can be overridden by a derived class to
@@ -280,6 +277,6 @@ struct GrainDistance
 };
 
 template <>
-void dataStore(std::ostream & stream, GrainTrackerGG::PartialFeatureData & feature, void * context);
+void dataStore(std::ostream & stream, GrainTrackerBase::PartialFeatureData & feature, void * context);
 template <>
-void dataLoad(std::istream & stream, GrainTrackerGG::PartialFeatureData & feature, void * context);
+void dataLoad(std::istream & stream, GrainTrackerBase::PartialFeatureData & feature, void * context);

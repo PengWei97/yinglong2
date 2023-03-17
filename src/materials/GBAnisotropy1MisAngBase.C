@@ -12,7 +12,7 @@ GBAnisotropy1MisAngBase::validParams()
   InputParameters params = Material::validParams();
   params.addCoupledVar("T", 300.0, "Temperature in Kelvin");
   params.addRequiredParam<UserObjectName>(
-      "grain_tracker", "Name of GrainTrackerGG user object that provides Grain ID according to element ID");
+      "grain_tracker", "Name of GrainTrackerBase user object that provides Grain ID according to element ID");
   params.addRequiredParam<UserObjectName>("euler_angle_provider",
                                           "Name of Euler angle provider user object");
   params.addParam<Real>("length_scale", 1.0e-9, "Length scale in m, where default is nm");
@@ -40,7 +40,7 @@ GBAnisotropy1MisAngBase::validParams()
 
 GBAnisotropy1MisAngBase::GBAnisotropy1MisAngBase(const InputParameters & parameters)
   : Material(parameters),
-    _grain_tracker(getUserObject<GrainTrackerGG>("grain_tracker")),
+    _grain_tracker(getUserObject<GrainTrackerBase>("grain_tracker")),
     _euler(getUserObject<EulerAngleProvider>("euler_angle_provider")),
     _is_primary(processor_id() == 0),
     _mesh_dimension(_mesh.dimension()),
@@ -190,7 +190,7 @@ GBAnisotropy1MisAngBase::computeQpProperties( )
 void 
 GBAnisotropy1MisAngBase::computerGBParameter()
 {
-  // get the GB location based on the grainTrackerGG in the quadrature point
+  // get the GB location based on the GrainTrackerBase in the quadrature point
   const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
 
   std::vector<unsigned int> orderParameterIndex; // Create a vector of order parameter indices

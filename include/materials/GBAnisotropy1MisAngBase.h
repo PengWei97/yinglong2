@@ -2,7 +2,7 @@
 
 #include "Material.h"
 #include "EulerAngleProvider.h"
-#include "GrainTrackerGG.h"
+#include "GrainTrackerBase.h"
 #include "CalculateMisorientationAngle.h"
 
 // GBAnisotropy1MisAngBase -- GB energy and GB mobility anisotropy is introduced by calculating the misorientation angle using Quaternion.
@@ -37,7 +37,7 @@ protected:
   // used to store orientation structure, including misorientation angle, istwinnig, twinning type;
   misoriAngle_isTwining _s_misoriTwin;  
 
-  const GrainTrackerGG & _grain_tracker;
+  const GrainTrackerBase & _grain_tracker;
   const EulerAngleProvider & _euler; 
   bool _is_primary;
 

@@ -8,7 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "OutputEulerAnglesGG.h"
-#include "GrainTrackerGG.h"
+#include "GrainTrackerBase.h"
 #include "EulerAngleProvider.h"
 
 registerMooseObject("yinglongApp", OutputEulerAnglesGG);
@@ -21,7 +21,7 @@ OutputEulerAnglesGG::validParams()
   params.addRequiredParam<UserObjectName>("euler_angle_provider",
                                           "Name of Euler angle provider user object");
   params.addRequiredParam<UserObjectName>("grain_tracker",
-                                          "The GrainTrackerGG UserObject to get values from.");
+                                          "The GrainTrackerBase UserObject to get values from.");
   MooseEnum euler_angles("phi1 Phi phi2");
   params.addRequiredParam<MooseEnum>("output_euler_angle", euler_angles, "Euler angle to output");
   return params;
@@ -30,7 +30,7 @@ OutputEulerAnglesGG::validParams()
 OutputEulerAnglesGG::OutputEulerAnglesGG(const InputParameters & parameters)
   : AuxKernel(parameters),
     _euler(getUserObject<EulerAngleProvider>("euler_angle_provider")),
-    _grain_tracker(getUserObject<GrainTrackerGG>("grain_tracker")),
+    _grain_tracker(getUserObject<GrainTrackerBase>("grain_tracker")),
     _output_euler_angle(getParam<MooseEnum>("output_euler_angle"))
 {
 }

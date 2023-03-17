@@ -7,7 +7,7 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "GrainTrackerGG.h"
+#include "GrainTrackerBase.h"
 
 // MOOSE includes
 #include "PolycrystalUserObjectBase.h"
@@ -25,7 +25,7 @@
 
 template <>
 void
-dataStore(std::ostream & stream, GrainTrackerGG::PartialFeatureData & feature, void * context)
+dataStore(std::ostream & stream, GrainTrackerBase::PartialFeatureData & feature, void * context)
 {
   storeHelper(stream, feature.boundary_intersection, context);
   storeHelper(stream, feature.id, context);
@@ -35,7 +35,7 @@ dataStore(std::ostream & stream, GrainTrackerGG::PartialFeatureData & feature, v
 
 template <>
 void
-dataLoad(std::istream & stream, GrainTrackerGG::PartialFeatureData & feature, void * context)
+dataLoad(std::istream & stream, GrainTrackerBase::PartialFeatureData & feature, void * context)
 {
   loadHelper(stream, feature.boundary_intersection, context);
   loadHelper(stream, feature.id, context);
@@ -43,15 +43,15 @@ dataLoad(std::istream & stream, GrainTrackerGG::PartialFeatureData & feature, vo
   loadHelper(stream, feature.status, context);
 }
 
-registerMooseObject("PhaseFieldApp", GrainTrackerGG);
+registerMooseObject("PhaseFieldApp", GrainTrackerBase);
 
 InputParameters
-GrainTrackerGG::validParams()
+GrainTrackerBase::validParams()
 {
   InputParameters params = FeatureFloodCount::validParams();
   params += GrainTrackerInterface::validParams();
 
-  // FeatureFloodCount adds a relationship manager, but we need to extend that for GrainTrackerGG
+  // FeatureFloodCount adds a relationship manager, but we need to extend that for GrainTrackerBase
   params.clearRelationshipManagers();
 
   params.addRelationshipManager(
@@ -66,7 +66,7 @@ GrainTrackerGG::validParams()
   params.addRelationshipManager("ElementSideNeighborLayers",
                                 Moose::RelationshipManagerType::ALGEBRAIC);
 
-  // The GrainTrackerGG requires non-volatile storage for tracking grains across invocations.
+  // The GrainTrackerBase requires non-volatile storage for tracking grains across invocations.
   params.set<bool>("restartable_required") = true;
 
   params.addClassDescription("Grain Tracker object for running reduced order parameter simulations "
@@ -75,7 +75,7 @@ GrainTrackerGG::validParams()
   return params;
 }
 
-GrainTrackerGG::GrainTrackerGG(const InputParameters & parameters)
+GrainTrackerBase::GrainTrackerBase(const InputParameters & parameters)
   : FeatureFloodCount(parameters),
     GrainTrackerInterface(),
     _tracking_step(getParam<int>("tracking_step")),
@@ -107,10 +107,10 @@ GrainTrackerGG::GrainTrackerGG(const InputParameters & parameters)
     mooseError("Can't start tracking after the initial condition when using a polycrystal_ic_uo");
 }
 
-GrainTrackerGG::~GrainTrackerGG() {}
+GrainTrackerBase::~GrainTrackerBase() {}
 
 Real
-GrainTrackerGG::getEntityValue(dof_id_type entity_id,
+GrainTrackerBase::getEntityValue(dof_id_type entity_id,
                              FieldType field_type,
                              std::size_t var_index) const
 {
@@ -121,33 +121,33 @@ GrainTrackerGG::getEntityValue(dof_id_type entity_id,
 }
 
 const std::vector<unsigned int> &
-GrainTrackerGG::getVarToFeatureVector(dof_id_type elem_id) const
+GrainTrackerBase::getVarToFeatureVector(dof_id_type elem_id) const
 {
   return FeatureFloodCount::getVarToFeatureVector(elem_id);
 }
 
 unsigned int
-GrainTrackerGG::getFeatureVar(unsigned int feature_id) const
+GrainTrackerBase::getFeatureVar(unsigned int feature_id) const
 {
   return FeatureFloodCount::getFeatureVar(feature_id);
 }
 
 std::size_t
-GrainTrackerGG::getNumberActiveGrains() const
+GrainTrackerBase::getNumberActiveGrains() const
 {
   // Note: This value is parallel consistent, see FeatureFloodCount::communicateAndMerge()
   return _feature_count;
 }
 
 std::size_t
-GrainTrackerGG::getTotalFeatureCount() const
+GrainTrackerBase::getTotalFeatureCount() const
 {
   // Note: This value is parallel consistent, see assignGrains()/trackGrains()
   return _max_curr_grain_id == invalid_id ? 0 : _max_curr_grain_id + 1;
 }
 
 Point
-GrainTrackerGG::getGrainCentroid(unsigned int grain_id) const
+GrainTrackerBase::getGrainCentroid(unsigned int grain_id) const
 {
   mooseAssert(grain_id < _feature_id_to_local_index.size(), "Grain ID out of bounds");
   auto grain_index = _feature_id_to_local_index[grain_id];
@@ -156,7 +156,7 @@ GrainTrackerGG::getGrainCentroid(unsigned int grain_id) const
   {
     mooseAssert(_feature_id_to_local_index[grain_id] < _feature_sets.size(),
                 "Grain index out of bounds");
-    // Note: This value is parallel consistent, see GrainTrackerGG::broadcastAndUpdateGrainData()
+    // Note: This value is parallel consistent, see GrainTrackerBase::broadcastAndUpdateGrainData()
     return _feature_sets[_feature_id_to_local_index[grain_id]]._centroid;
   }
 
@@ -165,7 +165,7 @@ GrainTrackerGG::getGrainCentroid(unsigned int grain_id) const
 }
 
 bool
-GrainTrackerGG::doesFeatureIntersectBoundary(unsigned int feature_id) const
+GrainTrackerBase::doesFeatureIntersectBoundary(unsigned int feature_id) const
 {
   // TODO: This data structure may need to be turned into a Multimap
   mooseAssert(feature_id < _feature_id_to_local_index.size(), "Grain ID out of bounds");
@@ -181,7 +181,7 @@ GrainTrackerGG::doesFeatureIntersectBoundary(unsigned int feature_id) const
 }
 
 bool
-GrainTrackerGG::doesFeatureIntersectSpecifiedBoundary(unsigned int feature_id) const
+GrainTrackerBase::doesFeatureIntersectSpecifiedBoundary(unsigned int feature_id) const
 {
   // TODO: This data structure may need to be turned into a Multimap
   mooseAssert(feature_id < _feature_id_to_local_index.size(), "Grain ID out of bounds");
@@ -198,7 +198,7 @@ GrainTrackerGG::doesFeatureIntersectSpecifiedBoundary(unsigned int feature_id) c
 }
 
 bool
-GrainTrackerGG::isFeaturePercolated(unsigned int feature_id) const
+GrainTrackerBase::isFeaturePercolated(unsigned int feature_id) const
 {
   // TODO: This data structure may need to be turned into a Multimap
   mooseAssert(feature_id < _feature_id_to_local_index.size(), "Grain ID out of bounds");
@@ -220,7 +220,7 @@ GrainTrackerGG::isFeaturePercolated(unsigned int feature_id) const
 }
 
 void
-GrainTrackerGG::initialize()
+GrainTrackerBase::initialize()
 {
   // Don't track grains if the current simulation step is before the specified tracking step
   if (_t_step < _tracking_step)
@@ -238,7 +238,7 @@ GrainTrackerGG::initialize()
 }
 
 void
-GrainTrackerGG::meshChanged()
+GrainTrackerBase::meshChanged()
 {
   // Update the element ID ranges for use when computing halo maps
   if (_compute_halo_maps && _mesh.isDistributedMesh())
@@ -263,7 +263,7 @@ GrainTrackerGG::meshChanged()
 }
 
 void
-GrainTrackerGG::execute()
+GrainTrackerBase::execute()
 {
   // Don't track grains if the current simulation step is before the specified tracking step
   if (_t_step < _tracking_step)
@@ -276,7 +276,7 @@ GrainTrackerGG::execute()
 }
 
 Real
-GrainTrackerGG::getThreshold(std::size_t var_index) const
+GrainTrackerBase::getThreshold(std::size_t var_index) const
 {
   // If we are inspecting a reserve op parameter, we need to make sure
   // that there is an entity above the reserve_op threshold before
@@ -288,14 +288,14 @@ GrainTrackerGG::getThreshold(std::size_t var_index) const
 }
 
 void
-GrainTrackerGG::prepopulateState(const FeatureFloodCount & ffc_object)
+GrainTrackerBase::prepopulateState(const FeatureFloodCount & ffc_object)
 {
   mooseAssert(_first_time, "This method should only be called on the first invocation");
 
   _feature_sets.clear();
 
   /**
-   * The minimum information needed to bootstrap the GrainTrackerGG is as follows:
+   * The minimum information needed to bootstrap the GrainTrackerBase is as follows:
    * _feature_sets
    * _feature_count
    */
@@ -320,13 +320,13 @@ GrainTrackerGG::prepopulateState(const FeatureFloodCount & ffc_object)
 }
 
 void
-GrainTrackerGG::finalize()
+GrainTrackerBase::finalize()
 {
   // Don't track grains if the current simulation step is before the specified tracking step
   if (_t_step < _tracking_step)
     return;
 
-  TIME_SECTION("finalize", 3, "Finalizing GrainTrackerGG");
+  TIME_SECTION("finalize", 3, "Finalizing GrainTrackerBase");
 
   // Expand the depth of the halos around all grains
   auto num_halo_layers = _halo_level >= 1
@@ -374,11 +374,11 @@ GrainTrackerGG::finalize()
 
   // TODO: Release non essential memory
   if (_verbosity_level > 0)
-    _console << "Finished inside of GrainTrackerGG\n" << std::endl;
+    _console << "Finished inside of GrainTrackerBase\n" << std::endl;
 }
 
 void
-GrainTrackerGG::broadcastAndUpdateGrainData()
+GrainTrackerBase::broadcastAndUpdateGrainData()
 {
   TIME_SECTION("broadcastAndUpdateGrainData", 3, "Broadcasting and Updating Grain Data");
 
@@ -441,7 +441,7 @@ GrainTrackerGG::broadcastAndUpdateGrainData()
 }
 
 void
-GrainTrackerGG::assignGrains()
+GrainTrackerBase::assignGrains()
 {
   mooseAssert(_first_time, "assignGrains may only be called on the first tracking step");
 
@@ -489,7 +489,7 @@ GrainTrackerGG::assignGrains()
 }
 
 void
-GrainTrackerGG::trackGrains()
+GrainTrackerBase::trackGrains()
 {
   TIME_SECTION("trackGrains", 3, "Tracking Grains");
 
@@ -816,8 +816,6 @@ GrainTrackerGG::trackGrains()
       }
     }
 
-    createAdjacentIDVector(); // by weipeng
-
     // Case 2 (inactive grains in _feature_sets_old)
     for (auto & grain : _feature_sets_old)
     {
@@ -868,33 +866,8 @@ GrainTrackerGG::trackGrains()
   }
 }
 
-void 
-GrainTrackerGG::createAdjacentIDVector() // by weipeng
-{
-
-  for (const auto grain_num_i : index_range(_feature_sets)) 
-  {
-    auto & grain_i = _feature_sets[grain_num_i];
-
-    if (grain_i._status == Status::INACTIVE)
-      continue;
-
-    for (const auto grain_num_j : index_range(_feature_sets))
-    {
-      auto & grain_j = _feature_sets[grain_num_j];
-
-      if (grain_i._id < grain_j._id && grain_j._status != Status::INACTIVE 
-          && grain_i.boundingBoxesIntersect(grain_j) && grain_i.halosIntersect(grain_j))
-      {
-        grain_i._adjacent_id.push_back(grain_num_j); // It must be noted that the number stored in _adjacent_id is _feature_sets[i], 
-        grain_j._adjacent_id.push_back(grain_num_i); // and the ID of the adjacent grain is _feature_sets[i]._id
-      }
-    }
-  }
-}
-
 void
-GrainTrackerGG::newGrainCreated(unsigned int new_grain_id)
+GrainTrackerBase::newGrainCreated(unsigned int new_grain_id)
 {
   if (!_first_time && _is_primary)
   {
@@ -915,7 +888,7 @@ GrainTrackerGG::newGrainCreated(unsigned int new_grain_id)
 }
 
 std::vector<unsigned int>
-GrainTrackerGG::getNewGrainIDs() const
+GrainTrackerBase::getNewGrainIDs() const
 {
   std::vector<unsigned int> new_ids(_max_curr_grain_id - _old_max_grain_id);
   auto new_id = _old_max_grain_id + 1;
@@ -927,7 +900,7 @@ GrainTrackerGG::getNewGrainIDs() const
 }
 
 void
-GrainTrackerGG::remapGrains()
+GrainTrackerBase::remapGrains()
 {
   // Don't remap grains if the current simulation step is before the specified tracking step
   if (_t_step < _tracking_step)
@@ -995,7 +968,7 @@ GrainTrackerGG::remapGrains()
 
             /**
              * We're not going to try very hard to look for a suitable remapping. Just set it to
-             * what we want and hope it all works out. Make the GrainTrackerGG great again!
+             * what we want and hope it all works out. Make the GrainTrackerBase great again!
              */
             grain1._var_index = grain2._var_index;
             grain1._status |= Status::DIRTY;
@@ -1197,7 +1170,7 @@ GrainTrackerGG::remapGrains()
 }
 
 void
-GrainTrackerGG::computeMinDistancesFromGrain(FeatureData & grain,
+GrainTrackerBase::computeMinDistancesFromGrain(FeatureData & grain,
                                            std::vector<std::list<GrainDistance>> & min_distances)
 {
   /**
@@ -1271,7 +1244,7 @@ GrainTrackerGG::computeMinDistancesFromGrain(FeatureData & grain,
 }
 
 bool
-GrainTrackerGG::attemptGrainRenumber(FeatureData & grain, unsigned int depth, unsigned int max_depth)
+GrainTrackerBase::attemptGrainRenumber(FeatureData & grain, unsigned int depth, unsigned int max_depth)
 {
   // End the recursion of our breadth first search
   if (depth > max_depth)
@@ -1446,7 +1419,7 @@ GrainTrackerGG::attemptGrainRenumber(FeatureData & grain, unsigned int depth, un
 }
 
 void
-GrainTrackerGG::swapSolutionValues(FeatureData & grain,
+GrainTrackerBase::swapSolutionValues(FeatureData & grain,
                                  std::size_t new_var_index,
                                  std::vector<std::map<Node *, CacheValues>> & cache,
                                  RemapCacheMode cache_mode)
@@ -1485,7 +1458,7 @@ GrainTrackerGG::swapSolutionValues(FeatureData & grain,
 }
 
 void
-GrainTrackerGG::swapSolutionValuesHelper(Node * curr_node,
+GrainTrackerBase::swapSolutionValuesHelper(Node * curr_node,
                                        std::size_t curr_var_index,
                                        std::size_t new_var_index,
                                        std::vector<std::map<Node *, CacheValues>> & cache,
@@ -1565,7 +1538,7 @@ GrainTrackerGG::swapSolutionValuesHelper(Node * curr_node,
 }
 
 void
-GrainTrackerGG::updateFieldInfo()
+GrainTrackerBase::updateFieldInfo()
 {
   TIME_SECTION("updateFieldInfo", 3, "Updating Field Info");
 
@@ -1643,7 +1616,7 @@ GrainTrackerGG::updateFieldInfo()
 }
 
 void
-GrainTrackerGG::communicateHaloMap()
+GrainTrackerBase::communicateHaloMap()
 {
   if (_compute_halo_maps)
   {
@@ -1729,7 +1702,7 @@ GrainTrackerGG::communicateHaloMap()
 }
 
 Real
-GrainTrackerGG::centroidRegionDistance(std::vector<BoundingBox> & bboxes1,
+GrainTrackerBase::centroidRegionDistance(std::vector<BoundingBox> & bboxes1,
                                      std::vector<BoundingBox> & bboxes2) const
 {
   /**
@@ -1756,7 +1729,7 @@ GrainTrackerGG::centroidRegionDistance(std::vector<BoundingBox> & bboxes1,
 }
 
 Real
-GrainTrackerGG::boundingRegionDistance(std::vector<BoundingBox> & bboxes1,
+GrainTrackerBase::boundingRegionDistance(std::vector<BoundingBox> & bboxes1,
                                      std::vector<BoundingBox> & bboxes2) const
 {
   /**
@@ -1806,7 +1779,7 @@ GrainTrackerGG::boundingRegionDistance(std::vector<BoundingBox> & bboxes1,
 }
 
 unsigned int
-GrainTrackerGG::getNextUniqueID()
+GrainTrackerBase::getNextUniqueID()
 {
   /**
    * Get the next unique grain ID but make sure to respect
