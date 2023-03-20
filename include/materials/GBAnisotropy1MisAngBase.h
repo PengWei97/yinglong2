@@ -2,14 +2,13 @@
 
 #include "Material.h"
 #include "EulerAngleProvider.h"
-#include "GrainTrackerBase.h"
-#include "CalculateMisorientationAngle.h"
-
-// GBAnisotropy1MisAngBase -- GB energy and GB mobility anisotropy is introduced by calculating the misorientation angle using Quaternion.
+#include "GrainTracker.h"
+#include "MisorientationAngleCalculator.h"
 
 /**
  * Function[kappa, gamma, m, L] = parameters (sigma, mob, w_GB, sigma0)
  * Parameter determination method is elaborated in Phys. Rev. B, 78(2), 024113, 2008, by N. Moelans for old MOP-PF model.
+ * GB energy and GB mobility anisotropy is introduced by calculating the misorientation angle using Quaternion.
 **/
 
 class GBAnisotropy1MisAngBase : public Material
@@ -26,18 +25,18 @@ protected:
   virtual void computerGBParameter();
 
   // calculated GB energy based on the the Read-Shockley
-  virtual Real calculatedGBEnergy(const misoriAngle_isTwining & misori_gbType);
+  virtual Real calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle);
 
   // calculated GB mobility based on the sigmoidal law
-  virtual Real calculatedGBMobility(const misoriAngle_isTwining & misori_gbType);
+  virtual Real calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle);
 
   // Calculation of Phase Field Model Parameters Based on GB Energy (sigma_ij) and GB Mobility (mob_ij)
   virtual void computerModelParameter();
 
   // used to store orientation structure, including misorientation angle, istwinnig, twinning type;
-  misoriAngle_isTwining _s_misoriTwin;  
+  MisorientationAngleData _s_misorientation_angle;  
 
-  const GrainTrackerBase & _grain_tracker;
+  const GrainTracker & _grain_tracker;
   const EulerAngleProvider & _euler; 
   bool _is_primary;
 
@@ -47,15 +46,14 @@ protected:
   const Real _time_scale;
   const Real _delta_sigma;
   const Real _delta_mob;
-  const Real _wGB;
-
+  const Real _matrix_Q;
   const Real _matrix_sigma;
   const Real _matrix_mob;
-  const Real _matrix_Q;
+  const Real _wGB;
 
   const bool _inclination_anisotropy;
   const bool _misorientation_anisotropy;
-  const bool _gbMobility_anisotropy;
+  const bool _gb_mobility_anisotropy;
   const bool _tb_anisotropy; // Whether to consider twin boundary anisotropy
 
   const VariableValue & _T;
@@ -70,7 +68,7 @@ protected:
   MaterialProperty<Real> & _gamma;
   MaterialProperty<Real> & _L;
   MaterialProperty<Real> & _mu;
-  MaterialProperty<Real> & _misAngle;
+  MaterialProperty<Real> & _misori_angle;
 
   MaterialProperty<Real> & _act_wGB; // needless 
 
