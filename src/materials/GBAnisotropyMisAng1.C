@@ -1,10 +1,10 @@
 #pragma once
-#include "GBAnisotropy1MisAng1.h"
+#include "GBAnisotropy1MisAng.h"
 
-registerMooseObject("yinglongApp", GBAnisotropy1MisAng1);
+registerMooseObject("yinglongApp", GBAnisotropy1MisAng);
 
 InputParameters
-GBAnisotropy1MisAng1::validParams()
+GBAnisotropy1MisAng::validParams()
 {
   InputParameters params = GBAnisotropy1MisAngBase::validParams();
   params.addClassDescription(
@@ -15,7 +15,7 @@ GBAnisotropy1MisAng1::validParams()
   return params;  
 }
 
-GBAnisotropy1MisAng1::GBAnisotropy1MisAng1(const InputParameters & parameters)
+GBAnisotropy1MisAng::GBAnisotropy1MisAng(const InputParameters & parameters)
   : GBAnisotropy1MisAngBase(parameters),
     _delta_theta_HAGB(getParam<Real>("delta_theta_HAGB")),
     _GBsigma_HAGB(getParam<Real>("GBsigma_HAGB")),
@@ -24,7 +24,7 @@ GBAnisotropy1MisAng1::GBAnisotropy1MisAng1(const InputParameters & parameters)
 }
 
 Real
-GBAnisotropy1MisAng1::calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle)
+GBAnisotropy1MisAng::calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle)
 {
   Real const & delta_theta = s_misorientation_angle._misor;
 
@@ -34,7 +34,7 @@ GBAnisotropy1MisAng1::calculatedGBEnergy(const MisorientationAngleData & s_misor
 }
 
 Real
-GBAnisotropy1MisAng1::calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle)
+GBAnisotropy1MisAng::calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle)
 {
   // Equation constant
   Real B = 5;

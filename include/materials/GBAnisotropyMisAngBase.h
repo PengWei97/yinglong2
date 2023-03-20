@@ -11,12 +11,12 @@
  * GB energy and GB mobility anisotropy is introduced by calculating the misorientation angle using Quaternion.
 **/
 
-class GBAnisotropy1MisAngBase : public Material
+class GBAnisotropyMisAngBase : public Material
 {
 public:
   static InputParameters validParams();
 
-  GBAnisotropy1MisAngBase(const InputParameters & parameters);
+  GBAnisotropyMisAngBase(const InputParameters & parameters);
 
 protected:
   virtual void computeQpProperties();

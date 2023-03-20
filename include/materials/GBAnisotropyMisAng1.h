@@ -8,11 +8,11 @@
  * directly through the input file
 **/
 
-class GBAnisotropy1MisAng1 : public GBAnisotropy1MisAngBase
+class GBAnisotropy1MisAng : public GBAnisotropy1MisAngBase
 {
 public:
   static InputParameters validParams();  
-  GBAnisotropy1MisAng1(const InputParameters & parameters);
+  GBAnisotropy1MisAng(const InputParameters & parameters);
 
 protected:
   // calculated GB energy based on the the Read-Shockley

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "GBAnisotropy1MisAngBase.h"
+#include "GBAnisotropyMisAngBase.h"
 #include "MooseMesh.h"
 #include <cmath>
 
-registerMooseObject("yinglongApp", GBAnisotropy1MisAngBase);
+registerMooseObject("yinglongApp", GBAnisotropyMisAngBase);
 
 InputParameters
-GBAnisotropy1MisAngBase::validParams()
+GBAnisotropyMisAngBase::validParams()
 {
   InputParameters params = Material::validParams();
   params.addCoupledVar("T", 300.0, "Temperature in Kelvin");
@@ -38,7 +38,7 @@ GBAnisotropy1MisAngBase::validParams()
   return params;
 }
 
-GBAnisotropy1MisAngBase::GBAnisotropy1MisAngBase(const InputParameters & parameters)
+GBAnisotropyMisAngBase::GBAnisotropyMisAngBase(const InputParameters & parameters)
   : Material(parameters),
     _grain_tracker(getUserObject<GrainTracker>("grain_tracker")),
     _euler(getUserObject<EulerAngleProvider>("euler_angle_provider")),
@@ -88,7 +88,7 @@ GBAnisotropy1MisAngBase::GBAnisotropy1MisAngBase(const InputParameters & paramet
 }
 
 void
-GBAnisotropy1MisAngBase::computeQpProperties( )
+GBAnisotropyMisAngBase::computeQpProperties( )
 {
   for (unsigned int i = 0; i < _op_num; ++i)
   {
@@ -176,7 +176,7 @@ GBAnisotropy1MisAngBase::computeQpProperties( )
 }
 
 void 
-GBAnisotropy1MisAngBase::computerGBParameter()
+GBAnisotropyMisAngBase::computerGBParameter()
 {
   // get the GB location based on the GrainTracker in the quadrature point
   const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
@@ -221,7 +221,7 @@ GBAnisotropy1MisAngBase::computerGBParameter()
 }
 
 Real
-GBAnisotropy1MisAngBase::calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle)
+GBAnisotropyMisAngBase::calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle)
 {  
   // transition misorientation angle between low and high-angle grain boundary
   Real trans_misori_angle_HAGB = 15.0;
@@ -235,7 +235,7 @@ GBAnisotropy1MisAngBase::calculatedGBEnergy(const MisorientationAngleData & s_mi
 }
 
 Real
-GBAnisotropy1MisAngBase::calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle)
+GBAnisotropyMisAngBase::calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle)
 {
   // Initialize GB mobility
   Real gbMob = _matrix_mob;
@@ -259,7 +259,7 @@ GBAnisotropy1MisAngBase::calculatedGBMobility(const MisorientationAngleData & s_
 }
 
 void
-GBAnisotropy1MisAngBase::computerModelParameter()
+GBAnisotropyMisAngBase::computerModelParameter()
 {
   Real sigma_init;
   Real g2 = 0.0;
