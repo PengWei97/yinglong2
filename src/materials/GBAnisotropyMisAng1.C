@@ -1,12 +1,12 @@
 #pragma once
-#include "GBAnisotropy1MisAng.h"
+#include "GBAnisotropyMisAng1.h"
 
-registerMooseObject("yinglongApp", GBAnisotropy1MisAng);
+registerMooseObject("yinglongApp", GBAnisotropyMisAng1);
 
 InputParameters
-GBAnisotropy1MisAng::validParams()
+GBAnisotropyMisAng1::validParams()
 {
-  InputParameters params = GBAnisotropy1MisAngBase::validParams();
+  InputParameters params = GBAnisotropyMisAngBase::validParams();
   params.addClassDescription(
       "Computes necessary material properties for the anisotropic grain growth model");
   params.addParam<Real>("delta_theta_HAGB", 15.0, "Benchmark value for GB anisotropy");
@@ -15,8 +15,8 @@ GBAnisotropy1MisAng::validParams()
   return params;  
 }
 
-GBAnisotropy1MisAng::GBAnisotropy1MisAng(const InputParameters & parameters)
-  : GBAnisotropy1MisAngBase(parameters),
+GBAnisotropyMisAng1::GBAnisotropyMisAng1(const InputParameters & parameters)
+  : GBAnisotropyMisAngBase(parameters),
     _delta_theta_HAGB(getParam<Real>("delta_theta_HAGB")),
     _GBsigma_HAGB(getParam<Real>("GBsigma_HAGB")),
     _GBmob_HAGB(getParam<Real>("GBmob_HAGB"))
@@ -24,7 +24,7 @@ GBAnisotropy1MisAng::GBAnisotropy1MisAng(const InputParameters & parameters)
 }
 
 Real
-GBAnisotropy1MisAng::calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle)
+GBAnisotropyMisAng1::calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle)
 {
   Real const & delta_theta = s_misorientation_angle._misor;
 
@@ -34,7 +34,7 @@ GBAnisotropy1MisAng::calculatedGBEnergy(const MisorientationAngleData & s_misori
 }
 
 Real
-GBAnisotropy1MisAng::calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle)
+GBAnisotropyMisAng1::calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle)
 {
   // Equation constant
   Real B = 5;

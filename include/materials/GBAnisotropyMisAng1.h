@@ -1,5 +1,5 @@
 #pragma once
-#include "GBAnisotropy1MisAngBase.h"
+#include "GBAnisotropyMisAngBase.h"
 
 /**
  * This version of GB energy and GB mobility anisotropy is introduced by the Read-Shockley  
@@ -8,11 +8,11 @@
  * directly through the input file
 **/
 
-class GBAnisotropy1MisAng : public GBAnisotropy1MisAngBase
+class GBAnisotropyMisAng1 : public GBAnisotropyMisAngBase
 {
 public:
   static InputParameters validParams();  
-  GBAnisotropy1MisAng(const InputParameters & parameters);
+  GBAnisotropyMisAng1(const InputParameters & parameters);
 
 protected:
   // calculated GB energy based on the the Read-Shockley
