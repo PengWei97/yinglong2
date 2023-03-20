@@ -1,5 +1,5 @@
-*.inl
-bm1*.i
+local*.inl
+bm*.i
 *.bz2
 job*.sh
 .libs
