@@ -5,7 +5,7 @@ my_filename2 = "bm1_gbIsotropy1"
 [Mesh]
   [ebsd_mesh]
     type = EBSDMeshGenerator
-    filename = local3_10min_withTwin_Ti700.inl
+    filename = test1_10min_withTwin_Ti700.inl
   []
   
   use_distributed_mesh = true
@@ -234,8 +234,8 @@ my_filename2 = "bm1_gbIsotropy1"
   dtmin = 1.0e-4
 
   start_time = 0.0
-  end_time = 1e6
-  # num_steps = 4
+  # end_time = 1e6
+  num_steps = 100
 
   [TimeStepper]
     type = IterationAdaptiveDT
