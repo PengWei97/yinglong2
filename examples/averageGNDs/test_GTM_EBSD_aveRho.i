@@ -2,8 +2,8 @@
 # (refer to DeformedGrain.i), and the initial miscrosturcture and GNDs 
 # (geometrically necessary dislocation densities) from EBSD data. 
 
-my_filename = "case3_EBSD_aveRho_test"
-my_filename1 = "case3_EBSD_aveRho_v2"
+my_filename = "case3_EBSD_aveRho"
+my_filename1 = "case3_EBSD_aveRho_v1"
 
 [Mesh]
   [ebsd_mesh]

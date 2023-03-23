@@ -1,4 +1,5 @@
-local*.inl
+*.tgz
+case*.inl
 bm*.i
 *.bz2
 job*.sh
