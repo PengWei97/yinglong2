@@ -8,13 +8,13 @@ typedef Eigen::Quaternion<Real> quatReal;
 struct misoriAngle_isTwining{Real misor; bool isTwinning; std::string twinType;};
 
 /**
- * This utility was created to calculate the misorientation angle of adjacent grains and identify twin boundaries.
+ * This is a real version of the misorientation angle between grains
  */
 class CalculateMisorientationAngle
 {
 public:
   // function 1: input Euler1 and Euler2, output s
-  static misoriAngle_isTwining calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, misoriAngle_isTwining & s, const std::string & CrystalType = "hcp", Real degree = 1.7453e-02);  
+  static misoriAngle_isTwining calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, misoriAngle_isTwining & s, const std::string & CrystalType = "hcp");  
 
   // function 2: Obtaining the key orientation using quaternion, including twinning, CS, SS
   static std::vector<quatReal> getKeyQuat(const std::string & QuatType, const std::string & CrystalKype = "hcp");
