@@ -33,16 +33,16 @@ GBAnisotropyMisAng2::calculatedGBEnergy(const MisorientationAngleData & s_misori
   Real const & delta_theta = s_misorientation_angle._misor;
   bool const & is_twin = s_misorientation_angle._is_twin;
 
-  // 初始化为高角度晶界的晶界能
+  // GB energy initialized to a high-angle grain boundary
   Real gbSigma = _GBsigma_HAGB;
 
-  if (delta_theta <= _delta_theta_HAGB && !is_twin) // 不是孪晶且取向差为小角度晶界时
+  if (delta_theta <= _delta_theta_HAGB && !is_twin)
     gbSigma = _GBsigma_HAGB * ((delta_theta / _delta_theta_HAGB * (1 - std::log(delta_theta / _delta_theta_HAGB)))); // Eq.8
   else if (is_twin)
   {
-    if (s_misorientation_angle._twin_type == TwinType::TT1) // 当判定为孪晶界，且为TT1时
+    if (s_misorientation_angle._twin_type == TwinType::TT1)
       gbSigma = _TT1_sigma;
-    else if (s_misorientation_angle._twin_type == TwinType::TT1) // 当判定为孪晶界，且为CT1时
+    else if (s_misorientation_angle._twin_type == TwinType::CT1)
       gbSigma = _CT1_sigma;
   }
 
@@ -56,13 +56,13 @@ GBAnisotropyMisAng2::calculatedGBMobility(const MisorientationAngleData & s_miso
   Real B = 5;
   Real n = 4;
 
-  // 初始化为高角度晶界的晶界能
+  // GB energy initialized to a high-angle grain boundary
   Real gbMob = _GBmob_HAGB;
 
   Real const & delta_theta = s_misorientation_angle._misor;
   bool const & is_twin = s_misorientation_angle._is_twin;
 
-  // 暂时没有考虑孪晶的低能特性
+  // The low-mobility characteristics of twins are not considered for the time being
   if (delta_theta <=  _delta_theta_HAGB)
     gbMob = _GBmob_HAGB * ((1- std::exp(-B * std::pow( delta_theta / _delta_theta_HAGB, n)))); // Eq.8
 

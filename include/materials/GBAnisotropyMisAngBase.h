@@ -3,7 +3,7 @@
 #include "Material.h"
 #include "EulerAngleProvider.h"
 #include "GrainTracker.h"
-#include "CalculateMisorientationAngle.h"
+#include "MisorientationAngleCalculator.h"
 
 /**
  * Function[kappa, gamma, m, L] = parameters (sigma, mob, w_GB, sigma0)

@@ -202,7 +202,7 @@ GBAnisotropyMisAngBase::computerGBParameter()
       {
         auto angles_i = _euler.getEulerAngles(grainIDIndex[i]);
         auto angles_j = _euler.getEulerAngles(grainIDIndex[j]);
-        _misori_s = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _misori_s);
+        _misori_s = MisorientationAngleCalculator::calculateMisorientaion(angles_i, angles_j, _misori_s);
 
         if (grainIDIndex.size() == 2)
         {
@@ -212,7 +212,7 @@ GBAnisotropyMisAngBase::computerGBParameter()
           {
             if (_misori_s._twin_type == TwinType::TT1) // TwinType::TT1
               _twinning_type[_qp] = 0.0;
-            else if (_misori_s._twin_type == TwinType::ST1) // TwinType::ST1
+            else if (_misori_s._twin_type == TwinType::CT1) // TwinType::CT1
               _twinning_type[_qp] = 1.0;
           }
         }

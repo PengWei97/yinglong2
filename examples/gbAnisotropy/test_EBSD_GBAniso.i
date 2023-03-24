@@ -1,11 +1,10 @@
-# This test is used for grain growth considering stored energy driving 
-# (refer to DeformedGrain.i), and the initial miscrosturcture and GNDs 
-# (geometrically necessary dislocation densities) from EBSD data. 
-# add 考虑晶界能和晶界迁移率各项异性
-# TODO:使用MisorientationAngleCalculator,目前识别孪晶有问题
+# Grain Growth considering stored energy driving (refer to DeformedGrain.i):
+# - the initial miscrosturcture and GNDs from EBSD data. 
+# - considering GB anisotropy
+# - identifying twin boundaries and considering its low energy property
 
 my_filename = "case1_gbAnisotropy"
-# my_filename1 = "case1_gbAnisotropy_v1"
+my_filename1 = "case1_gbAnisotropy_v1"
 
 [Mesh]
   [ebsd_mesh]
@@ -104,7 +103,6 @@ my_filename = "case1_gbAnisotropy"
   [./PolycrystalKernel]
   [../]
   [./PolycrystalStoredEnergyEBSD]
-    
     GNDs_provider = ebsd_reader
   [../]
 []
@@ -188,12 +186,11 @@ my_filename = "case1_gbAnisotropy"
 
     euler_angle_provider = ebsd_reader
 
-    output_properties = 'kappa_op gamma_asym L mu misori_angle twinning_type'
+    output_properties = 'kappa_op gamma_asymm L mu misori_angle twinning_type'
     outputs = my_exodus
   [../]
   [./deformed]
     type = DeformedGrainEBSDMaterial
-    
     GNDs_provider = ebsd_reader
     output_properties = 'rho_eff'
     outputs = my_exodus
@@ -245,7 +242,7 @@ my_filename = "case1_gbAnisotropy"
   dtmin = 1.0e-4
 
   start_time = 0.0
-  num_steps = 1
+  num_steps = 6
 
   [TimeStepper]
     type = IterationAdaptiveDT
@@ -263,21 +260,21 @@ my_filename = "case1_gbAnisotropy"
 []
 
 [Outputs]
-  file_base = ./${my_filename}/out_${my_filename}
-  # [./my_checkpoint]
-  #   # interval = 5
-  #   type = Checkpoint
-  #   additional_execute_on = 'FINAL'
-  # [../]
+  [./my_checkpoint]
+    file_base = ./${my_filename}/out_${my_filename}
+    interval = 2
+    type = Checkpoint
+    additional_execute_on = 'FINAL'
+  [../]
   [my_exodus]
-    # file_base = ./${my_filename1}/out_${my_filename}    
-    # interval = 5
+    file_base = ./${my_filename1}/out_${my_filename}    
+    interval = 2
     type = Nemesis
   [../]
-  # [./csv]
-  #   file_base = ./csv_${my_filename1}/out_${my_filename}
-  #   # interval = 5
-  #   type = CSV
-  # [../]
+  [./csv]
+    file_base = ./csv_${my_filename1}/out_${my_filename}
+    interval = 2
+    type = CSV
+  [../]
   print_linear_residuals = false
 []
