@@ -1,7 +1,7 @@
 #include "CalculateMisorientationAngle.h"
 
-misoriAngle_isTwining
-CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, misoriAngle_isTwining & s, const std::string & CrystalType)
+MisorientationAngleData
+CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, MisorientationAngleData & s, const std::string & CrystalType)
 {
   const Real degree = 1.7453e-02;
   Real tolerance_mis = 3.90;
@@ -18,9 +18,9 @@ CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, Euler
   // calculate misorientation angle
   value_acos = dotQuaternion(q1, q2, qcs, qss);
   if (value_acos <= 1.0 && value_acos >= -1.0)
-    s.misor = (Real)(2.0*std::acos(value_acos))/degree;
+    s._misor = (Real)(2.0*std::acos(value_acos))/degree;
   else
-    s.misor =  tolerance_mis + 1;
+    s._misor =  tolerance_mis + 1;
 
   for (unsigned i = 0; i < q3_twin.size(); ++i)
   {
@@ -28,12 +28,12 @@ CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, Euler
     if (value_acos <= 1.0 && value_acos >= -1.0)
       misor_twinning = (Real)(2.0*std::acos(value_acos))/degree;
 
-    s.isTwinning = (bool)(misor_twinning < tolerance_mis); // Judging whether it is a twin boundary
+    s._is_twin = (bool)(misor_twinning < tolerance_mis); // Judging whether it is a twin boundary
 
     // Determine which type of twin boundary 0 ~ TT1 (tensile twins), 1 ~ CT1 (compression twins)
-    if (s.isTwinning) 
+    if (s._is_twin) 
     {
-      s.twinType = "twin_type" + std::to_string(i); 
+      s._twin_type = "twin_type" + std::to_string(i); 
       break;
     }
   }

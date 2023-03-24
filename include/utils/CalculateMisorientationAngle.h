@@ -5,7 +5,7 @@
 #include "EulerAngleProvider.h"
 
 typedef Eigen::Quaternion<Real> quatReal;
-struct misoriAngle_isTwining{Real misor; bool isTwinning; std::string twinType;};
+struct MisorientationAngleData{Real _misor = 0.0; bool _is_twin = false; std::string _twin_type = "None";};
 
 /**
  * This is a real version of the misorientation angle between grains
@@ -14,7 +14,7 @@ class CalculateMisorientationAngle
 {
 public:
   // function 1: input Euler1 and Euler2, output s
-  static misoriAngle_isTwining calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, misoriAngle_isTwining & s, const std::string & CrystalType = "hcp");  
+  static MisorientationAngleData calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, MisorientationAngleData & s, const std::string & CrystalType = "hcp");  
 
   // function 2: Obtaining the key orientation using quaternion, including twinning, CS, SS
   static std::vector<quatReal> getKeyQuat(const std::string & QuatType, const std::string & CrystalKype = "hcp");
