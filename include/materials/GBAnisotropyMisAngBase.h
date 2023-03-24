@@ -3,8 +3,8 @@
 #include "Material.h"
 #include "EulerAngleProvider.h"
 #include "GrainTracker.h"
-#include "MisorientationAngleCalculator.h"
-
+// #include "MisorientationAngleCalculator.h"
+#include "CalculateMisorientationAngle.h"
 /**
  * Function[kappa, gamma, m, L] = parameters (sigma, mob, w_GB, sigma0)
  * Parameter determination method is elaborated in Phys. Rev. B, 78(2), 024113, 2008, by N. Moelans for old MOP-PF model.
@@ -24,17 +24,18 @@ protected:
   // computer GB energy and mobility matrix based on the misorientation
   virtual void computerGBParameter();
 
-  // calculated GB energy based on the the Read-Shockley
-  virtual Real calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle);
-
-  // calculated GB mobility based on the sigmoidal law
-  virtual Real calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle);
-
   // Calculation of Phase Field Model Parameters Based on GB Energy (sigma_ij) and GB Mobility (mob_ij)
   virtual void computerModelParameter();
+  
+  // calculated GB energy based on the the Read-Shockley
+  virtual Real calculatedGBEnergy(const misoriAngle_isTwining & _misori_s);
+
+  // calculated GB mobility based on the sigmoidal law
+  virtual Real calculatedGBMobility(const misoriAngle_isTwining & _misori_s);
 
   // used to store orientation structure, including misorientation angle, istwinnig, twinning type;
-  MisorientationAngleData _s_misorientation_angle;  
+  // misoriAngle_isTwining _misori_s;  
+  misoriAngle_isTwining _misori_s;
 
   const GrainTracker & _grain_tracker;
   const EulerAngleProvider & _euler; 
@@ -54,11 +55,10 @@ protected:
   const bool _inclination_anisotropy;
   const bool _misorientation_anisotropy;
   const bool _gb_mobility_anisotropy;
-  const bool _tb_anisotropy; // Whether to consider twin boundary anisotropy
 
   const VariableValue & _T;
 
-  std::vector<std::vector<Real>> _sigma; // Obtained by the function computerGBParameter()
+  std::vector<std::vector<Real>> _sigma;
   std::vector<std::vector<Real>> _mob;
   std::vector<std::vector<Real>> _Q;
   std::vector<std::vector<Real>> _kappa_gamma;
@@ -69,6 +69,7 @@ protected:
   MaterialProperty<Real> & _L;
   MaterialProperty<Real> & _mu;
   MaterialProperty<Real> & _misori_angle;
+  MaterialProperty<Real> & _twinning_type;
 
   MaterialProperty<Real> & _act_wGB; // needless 
 

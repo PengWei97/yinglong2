@@ -18,7 +18,7 @@ GBAnisotropyMisAngBase::validParams()
   params.addParam<Real>("length_scale", 1.0e-9, "Length scale in m, where default is nm");
   params.addParam<Real>("time_scale", 1.0e-9, "Time scale in s, where default is ns");
   params.addParam<Real>("matrix_sigma", 0.5, "Matrix GB energy in J/m^2");
-  params.addParam<Real>("matrix_mob", 2.5e-6, "Matrix GB mobility prefactor in m^4/(J*s)");
+  params.addParam<Real>("matrix_mob", 2.5e-12, "Matrix GB mobility prefactor in m^4/(J*s)");
   params.addParam<Real>("matrix_Q", 0.23, "Matrix Migration energy in eV");
   params.addRequiredParam<Real>("wGB", "Diffuse GB width in nm");
   params.addParam<Real>(
@@ -31,8 +31,6 @@ GBAnisotropyMisAngBase::validParams()
       "The GB anisotropy based on misorientation would be considered if true");
   params.addParam<bool>("gb_mobility_anisotropy", false,
       "The GB mobility anisotropy would be considered if true");
-  params.addParam<bool>("tb_anisotropy", false,
-      "The twin boundary anisotropy would be considered if true");
   params.addRequiredCoupledVarWithAutoBuild(
       "v", "var_name_base", "op_num", "Array of coupled variables");
   return params;
@@ -55,13 +53,13 @@ GBAnisotropyMisAngBase::GBAnisotropyMisAngBase(const InputParameters & parameter
     _inclination_anisotropy(getParam<bool>("inclination_anisotropy")),
     _misorientation_anisotropy(getParam<bool>("misorientation_anisotropy")),
     _gb_mobility_anisotropy(getParam<bool>("gb_mobility_anisotropy")),
-    _tb_anisotropy(getParam<bool>("tb_anisotropy")),
     _T(coupledValue("T")),
     _kappa(declareProperty<Real>("kappa_op")),
     _gamma(declareProperty<Real>("gamma_asymm")),
     _L(declareProperty<Real>("L")),
     _mu(declareProperty<Real>("mu")),
     _misori_angle(declareProperty<Real>("misori_angle")),
+    _twinning_type(declareProperty<Real>("twinning_type")),
     _act_wGB(declareProperty<Real>("act_wGB")),
     _kb(8.617343e-5),      // Boltzmann constant in eV/K
     _JtoeV(6.24150974e18), // Joule to eV conversion
@@ -89,7 +87,10 @@ GBAnisotropyMisAngBase::GBAnisotropyMisAngBase(const InputParameters & parameter
 
 void
 GBAnisotropyMisAngBase::computeQpProperties( )
-{
+{ 
+  _misori_angle[_qp] = 0.0;
+  _twinning_type[_qp] = -1.0;
+
   for (unsigned int i = 0; i < _op_num; ++i)
   {
     std::vector<Real> row_sigma;
@@ -107,7 +108,6 @@ GBAnisotropyMisAngBase::computeQpProperties( )
     _mob[i] = row_mob; // unit: m^4/(J*s) GB mobility
     _Q[i] = row_Q; // unit: eV
   }
-  _misori_angle[_qp] = 0.0;
 
   computerGBParameter();
 
@@ -202,60 +202,30 @@ GBAnisotropyMisAngBase::computerGBParameter()
       {
         auto angles_i = _euler.getEulerAngles(grainIDIndex[i]);
         auto angles_j = _euler.getEulerAngles(grainIDIndex[j]);
-        _s_misorientation_angle = MisorientationAngleCalculator::calculateMisorientaion(angles_i, angles_j, _s_misorientation_angle);
+        _misori_s = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _misori_s);
 
         if (grainIDIndex.size() == 2)
-          _misori_angle[_qp] =  _s_misorientation_angle._misor;
+        {
+          _misori_angle[_qp] =  _misori_s.misor;
 
-        if (_s_misorientation_angle._misor > 1.0)
-          _sigma[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBEnergy(_s_misorientation_angle);
+          if (_misori_s.isTwinning)
+            if (_misori_s.twinType == "twin_type0")
+              _twinning_type[_qp] = 0.0;
+            else if (_misori_s.twinType == "twin_type1")
+              _twinning_type[_qp] = 1.0;
+        }
 
-        if (_gb_mobility_anisotropy && _s_misorientation_angle._misor > 1.0)
-          _mob[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBMobility(_s_misorientation_angle);
+        if (_misori_s.misor > 1.0)
+          _sigma[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBEnergy(_misori_s);
+
+        if (_gb_mobility_anisotropy && _misori_s.misor > 1.0)
+          _mob[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBMobility(_misori_s);
 
         _sigma[orderParameterIndex[j]][orderParameterIndex[i]] =  _sigma[orderParameterIndex[i]][orderParameterIndex[j]];
         _mob[orderParameterIndex[j]][orderParameterIndex[i]] =  _mob[orderParameterIndex[i]][orderParameterIndex[j]];
       }    
   }
   
-}
-
-Real
-GBAnisotropyMisAngBase::calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle)
-{  
-  // transition misorientation angle between low and high-angle grain boundary
-  Real trans_misori_angle_HAGB = 15.0;
-  
-  // GB energy corresponding to the high-angle grain boundary
-  Real GBsigma_HAGB = 0.9;
-
-  Real gbSigma = GBsigma_HAGB * ((s_misorientation_angle._misor / trans_misori_angle_HAGB * (1 - std::log(s_misorientation_angle._misor / trans_misori_angle_HAGB))));
-
-  return gbSigma;
-}
-
-Real
-GBAnisotropyMisAngBase::calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle)
-{
-  // Initialize GB mobility
-  Real gbMob = _matrix_mob;
-
-  // transition misorientation angle between low and high-angle grain boundary
-  Real trans_misori_angle_HAGB = 15;
-
-  // GB mobility corresponding to the high-angle grain boundary
-  Real GBmob_HAGB = _matrix_mob*2.0;
-
-  // Equation constant
-  Real B = 5;
-  Real n = 4;
-
-  if (s_misorientation_angle._misor >  trans_misori_angle_HAGB)
-    gbMob = GBmob_HAGB;
-  else
-    gbMob = GBmob_HAGB * ((1- std::exp(-B * std::pow( s_misorientation_angle._misor / trans_misori_angle_HAGB, n)))); // Eq.8
-
-  return gbMob;
 }
 
 void
@@ -325,4 +295,44 @@ GBAnisotropyMisAngBase::computerModelParameter()
       _a_g2[m][n] = a_star; // upper triangle stores "a" data.
       _a_g2[n][m] = g2;     // lower triangle stores "g2" data.
     }  
+}
+
+Real
+GBAnisotropyMisAngBase::calculatedGBEnergy(const misoriAngle_isTwining & _misori_s)
+{  
+  Real gbSigma = _matrix_sigma;
+  // transition misorientation angle between low and high-angle grain boundary
+  Real trans_misori_angle_HAGB = 15.0;
+  
+  // GB energy corresponding to the high-angle grain boundary
+  Real GBsigma_HAGB = 0.9;
+
+  if (_misori_s.misor <= trans_misori_angle_HAGB)
+    gbSigma = GBsigma_HAGB * ((_misori_s.misor / trans_misori_angle_HAGB * (1 - std::log(_misori_s.misor / trans_misori_angle_HAGB))));
+
+  return gbSigma;
+}
+
+Real
+GBAnisotropyMisAngBase::calculatedGBMobility(const misoriAngle_isTwining & _misori_s)
+{
+  // Initialize GB mobility
+  Real gbMob = _matrix_mob;
+
+  // transition misorientation angle between low and high-angle grain boundary
+  Real trans_misori_angle_HAGB = 15;
+
+  // GB mobility corresponding to the high-angle grain boundary
+  Real GBmob_HAGB = _matrix_mob*2.0;
+
+  // Equation constant
+  Real B = 5;
+  Real n = 4;
+
+  if (_misori_s.misor >  trans_misori_angle_HAGB)
+    gbMob = GBmob_HAGB;
+  else
+    gbMob = GBmob_HAGB * ((1- std::exp(-B * std::pow( _misori_s.misor / trans_misori_angle_HAGB, n)))); // Eq.8
+
+  return gbMob;
 }
