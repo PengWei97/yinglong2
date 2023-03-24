@@ -16,10 +16,10 @@ public:
 
 protected:
   // calculated GB energy based on the the Read-Shockley
-  virtual Real calculatedGBEnergy(const MisorientationAngleData & s_misorientation_angle) override; 
+  virtual Real calculatedGBEnergy(const MisorientationAngleData & _misori_s) override; 
 
   // calculated GB mobility based on the sigmoidal law
-  virtual Real calculatedGBMobility(const MisorientationAngleData & s_misorientation_angle) override;  
+  virtual Real calculatedGBMobility(const MisorientationAngleData & _misori_s) override;  
 
   const Real _delta_theta_HAGB;
   const Real _GBsigma_HAGB;

@@ -5,7 +5,11 @@
 #include "EulerAngleProvider.h"
 
 typedef Eigen::Quaternion<Real> quatReal;
-struct MisorientationAngleData{Real _misor = 0.0; bool _is_twin = false; std::string _twin_type = "None";};
+
+// set twin type
+enum class TwinType {NONE, TT1, ST1};
+
+struct MisorientationAngleData{Real _misor = 0.0; bool _is_twin = false; TwinType _twin_type = TwinType::NONE;};
 
 /**
  * This is a real version of the misorientation angle between grains

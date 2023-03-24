@@ -3,8 +3,8 @@
 #include "Material.h"
 #include "EulerAngleProvider.h"
 #include "GrainTracker.h"
-// #include "MisorientationAngleCalculator.h"
 #include "CalculateMisorientationAngle.h"
+
 /**
  * Function[kappa, gamma, m, L] = parameters (sigma, mob, w_GB, sigma0)
  * Parameter determination method is elaborated in Phys. Rev. B, 78(2), 024113, 2008, by N. Moelans for old MOP-PF model.
@@ -28,14 +28,13 @@ protected:
   virtual void computerModelParameter();
   
   // calculated GB energy based on the the Read-Shockley
-  virtual Real calculatedGBEnergy(const misoriAngle_isTwining & _misori_s);
+  virtual Real calculatedGBEnergy(const MisorientationAngleData & _misori_s);
 
   // calculated GB mobility based on the sigmoidal law
-  virtual Real calculatedGBMobility(const misoriAngle_isTwining & _misori_s);
+  virtual Real calculatedGBMobility(const MisorientationAngleData & _misori_s);
 
   // used to store orientation structure, including misorientation angle, istwinnig, twinning type;
-  // misoriAngle_isTwining _misori_s;  
-  misoriAngle_isTwining _misori_s;
+  MisorientationAngleData _misori_s;
 
   const GrainTracker & _grain_tracker;
   const EulerAngleProvider & _euler; 

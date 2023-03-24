@@ -31,11 +31,21 @@ CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, Euler
     s._is_twin = (bool)(misor_twinning < tolerance_mis); // Judging whether it is a twin boundary
 
     // Determine which type of twin boundary 0 ~ TT1 (tensile twins), 1 ~ CT1 (compression twins)
-    if (s._is_twin) 
+    if (s._is_twin && i == 0)
     {
-      s._twin_type = "twin_type" + std::to_string(i); 
+      s._twin_type = TwinType::TT1;
       break;
-    }
+    } 
+    else if (s._is_twin && i == 1)
+    {
+      s._twin_type = TwinType::ST1;
+      break;
+    } 
+      
+    // {
+    //   s._twin_type = "twin_type" + std::to_string(i); 
+    //   break;
+    // }
   }
   return s;
 }
@@ -146,12 +156,20 @@ CalculateMisorientationAngle::itimesQuaternion(const quatReal & q1, const quatRe
 Real
 CalculateMisorientationAngle::dotOuterQuaternion(const quatReal & rot1, const std::vector<quatReal> & rot2)
 {
-  std::vector<Real> d_vec(rot2.size());
+  // std::vector<Real> d_vec(rot2.size());
+
+  Real d = 0;
+  Real temp = 0;
 
   for (unsigned int i = 0; i < rot2.size(); ++i)
-    d_vec[i] = std::abs(rot1.w()*rot2[i].w() + rot1.x()*rot2[i].x() + rot1.y()*rot2[i].y() + rot1.z()*rot2[i].z()); // rot1 * rot2'
+  {
+    // d_vec[i] = std::abs(rot1.w()*rot2[i].w() + rot1.x()*rot2[i].x() + rot1.y()*rot2[i].y() + rot1.z()*rot2[i].z()); // rot1 * rot2'
+    temp = std::abs(rot1.w()*rot2[i].w() + rot1.x()*rot2[i].x() + rot1.y()*rot2[i].y() + rot1.z()*rot2[i].z());
+    if (temp > d)
+      d = temp;
+  }
 
-  Real d = *std::max_element(d_vec.begin(), d_vec.end());
+  // Real d = *std::max_element(d_vec.begin(), d_vec.end());
 
   return d;
 }
