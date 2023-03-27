@@ -23,6 +23,7 @@ PolycrystalStoredEnergyEBSDAction::validParams()
                                         "specifies the total number of OPs representing");
   params.addRequiredParam<std::string>("var_name_base", "specifies the base name of the variables");
   params.addParam<Real>("length_scale", 1.0e-9, "Length scale in m, where default is nm");
+  params.addParam<bool>("concurrent_recovery", false, "The concurrent recovery would be considered if true");
   params.addParam<bool>(
       "use_displaced_mesh", false, "Whether to use displaced mesh in the kernels");
   params.addRequiredParam<UserObjectName>("grain_tracker",
@@ -35,7 +36,8 @@ PolycrystalStoredEnergyEBSDAction::PolycrystalStoredEnergyEBSDAction(const Input
   : Action(params),
     _op_num(getParam<unsigned int>("op_num")),
     _var_name_base(getParam<std::string>("var_name_base")),
-    _length_scale(getParam<Real>("length_scale"))
+    _length_scale(getParam<Real>("length_scale")),
+    _concurrent_recovery(getParam<bool>("concurrent_recovery"))
 {
 }
 
@@ -65,6 +67,7 @@ PolycrystalStoredEnergyEBSDAction::act()
     params.set<NonlinearVariableName>("variable") = var_name;
     params.set<std::vector<VariableName>>("v") = v;
     params.set<Real>("length_scale") = _length_scale;
+    params.set<bool>("concurrent_recovery") = _concurrent_recovery;
     params.set<bool>("use_displaced_mesh") = getParam<bool>("use_displaced_mesh");
     params.set<UserObjectName>("grain_tracker") = getParam<UserObjectName>("grain_tracker");
     params.set<UserObjectName>("GNDs_provider") = getParam<UserObjectName>("GNDs_provider");

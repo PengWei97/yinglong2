@@ -18,6 +18,7 @@ ACSEDGPolyEBSD::validParams()
   params.addClassDescription("Stored Energy contribution to grain growth");
   params.addRequiredCoupledVar("v", "Array of coupled variable names");
   params.addParam<Real>("length_scale", 1.0e-9, "Length scale in m, where default is nm");
+  params.addParam<bool>("concurrent_recovery", false, "The concurrent recovery would be considered if true");
   params.addRequiredParam<UserObjectName>("grain_tracker",
                                           "The GrainTracker UserObject to get values from.");
   params.addRequiredParam<UserObjectName>("GNDs_provider", "GNDs provider for EBSD reader");                                    
@@ -31,6 +32,7 @@ ACSEDGPolyEBSD::ACSEDGPolyEBSD(const InputParameters & parameters)
     _vals(coupledValues("v")),
     _vals_var(coupledIndices("v")),
     _length_scale(getParam<Real>("length_scale")),
+    _concurrent_recovery(getParam<bool>("concurrent_recovery")),  
     _beta(getMaterialProperty<Real>("beta")),
     _rho_eff(getMaterialProperty<Real>("rho_eff")),
     _grain_tracker(getUserObject<GrainTrackerInterface>("grain_tracker")),
@@ -55,6 +57,13 @@ ACSEDGPolyEBSD::computeDFDOP(PFFunctionType type)
 
   if (grn_index != FeatureFloodCount::invalid_id && grn_index < _GNDs_provider.getGrainNum())
     rho_i = _GNDs_provider.getAvgData(grn_index)._custom[0] * (_length_scale * _length_scale);
+
+  // concurrent recovery
+  const Real rho_end = 3.0e7 * (_length_scale * _length_scale); // the minimum GND due to recovery 1/m^2
+  auto & time_current = _fe_problem.time(); // current simulation time s
+
+  if (_concurrent_recovery && rho_i > rho_end)
+    rho_i = (rho_i - rho_end) * std::exp(-8.535e-4 * time_current) + rho_end; // fitting function considering concurrent recovery
 
   // Calculate the contributions of the deformation energy to the residual and Jacobian
   Real drho_eff_detai = 2.0 * _u[_qp] * (rho_i - _rho_eff[_qp]) / SumEtai2;

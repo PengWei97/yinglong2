@@ -22,6 +22,7 @@ DeformedGrainEBSDMaterial::validParams()
   params.addParam<Real>("time_scale", 1.0e-6, "Time scale in sec, where default is micro sec");
   params.addParam<Real>("Elas_Mod", 2.50e10, "Elastic Modulus in J/m^3");
   params.addParam<Real>("Burg_vec", 3.0e-10, "Length of Burger Vector in m");
+  params.addParam<bool>("concurrent_recovery", false, "The concurrent recovery would be considered if true");
   params.addRequiredParam<UserObjectName>("grain_tracker",
                                           "The GrainTracker UserObject to get values from.");
   params.addRequiredParam<UserObjectName>("GNDs_provider", "GNDs provider for EBSD reader");
@@ -37,6 +38,7 @@ DeformedGrainEBSDMaterial::DeformedGrainEBSDMaterial(const InputParameters & par
     _Elas_Mod(getParam<Real>("Elas_Mod")),
     _Burg_vec(getParam<Real>("Burg_vec")),
     _JtoeV(6.24150974e18),
+    _concurrent_recovery(getParam<bool>("concurrent_recovery")),
     _beta(declareProperty<Real>("beta")),
     _rho_eff(declareProperty<Real>("rho_eff")),
     _grain_tracker(getUserObject<GrainTrackerInterface>("grain_tracker")),
@@ -57,6 +59,11 @@ DeformedGrainEBSDMaterial::computeQpProperties()
 
   Real rho_i;
   Real rho0 = 0.0;
+
+  // considering concurrent recovery
+  const Real rho_end = 3.0e7 * (_length_scale * _length_scale); // the minimum GND due to recovery 1/m^2
+  auto & time_current = _fe_problem.time(); // current simulation time s
+
   _rho_eff[_qp] = 0.0;
   for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index)
   {
@@ -69,6 +76,9 @@ DeformedGrainEBSDMaterial::computeQpProperties()
       rho_i = _GNDs_provider.getAvgData(grain_id)._custom[0] * (_length_scale * _length_scale); // GNDs for each grain, 1/m^2 
     else
       rho_i = 2.0e15 * (_length_scale * _length_scale); // TODO - need to be more physically based
+
+    if (_concurrent_recovery && rho_i > rho_end)
+      rho_i = (rho_i - rho_end) * std::exp(-8.535e-4 * time_current) + rho_end; // fitting function considering concurrent recovery
 
     rho0 += rho_i * (*_vals[op_index])[_qp] * (*_vals[op_index])[_qp];
   }

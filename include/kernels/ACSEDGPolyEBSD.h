@@ -43,6 +43,7 @@ protected:
   const std::vector<unsigned int> _vals_var;
 
   const Real _length_scale;
+  const bool _concurrent_recovery;
   /// the prefactor needed to calculate the deformation energy from dislocation density
   const MaterialProperty<Real> & _beta;
 

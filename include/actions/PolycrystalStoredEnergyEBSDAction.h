@@ -34,4 +34,7 @@ protected:
 
   /// Length scale of the solution
   const Real _length_scale;
+
+  /// whether to considering concurrent recovery
+  const bool _concurrent_recovery;
 };

@@ -38,6 +38,7 @@ protected:
   const Real _Elas_Mod; // the elastic modulus
   const Real _Burg_vec; // the Length of Burger's Vector
   const Real _JtoeV; // Joule to eV conversion
+  const bool _concurrent_recovery;
  
   MaterialProperty<Real> & _beta;
   MaterialProperty<Real> & _rho_eff; // the average effective dislocation density
