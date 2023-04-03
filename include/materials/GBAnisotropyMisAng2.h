@@ -29,4 +29,6 @@ protected:
 
   const Real _TT1_sigma;
   const Real _CT1_sigma;
+  const Real _TT1_mob;
+  const Real _CT1_mob;
 };

@@ -13,7 +13,9 @@ GBAnisotropyMisAng2::validParams()
   params.addParam<Real>("GBsigma_HAGB", 0.9, "GB energy of a high angle GB");
   params.addParam<Real>("GBmob_HAGB", 2.5e-6, "GB mobility of a high angle GB");
   params.addParam<Real>("TT1_sigma", 2.5e-6, "Twin boundary energy for {10-12} tensile twin (type 1) based on MD, J/m^2");
-  params.addParam<Real>("CT1_sigma", 2.5e-6, "Twin boundary energy for {11-22} tensile twin (type 1) based on MD, J/m^2");
+  params.addParam<Real>("CT1_sigma", 2.5e-6, "Twin boundary energy for {11-22} compresssion twin (type 1) based on MD, J/m^2");
+  params.addParam<Real>("TT1_mob", 2.5e-6, "Twin boundary energy for {10-12} tensile twin (type 1) based on experiment, J/m^2");
+  params.addParam<Real>("CT1_mob", 2.5e-6, "Twin boundary energy for {11-22} compresssion twin (type 1) based on experiment, J/m^2");
   return params;  
 }
 
@@ -23,7 +25,9 @@ GBAnisotropyMisAng2::GBAnisotropyMisAng2(const InputParameters & parameters)
     _GBsigma_HAGB(getParam<Real>("GBsigma_HAGB")),
     _GBmob_HAGB(getParam<Real>("GBmob_HAGB")),
     _TT1_sigma(getParam<Real>("TT1_sigma")),
-    _CT1_sigma(getParam<Real>("CT1_sigma"))
+    _CT1_sigma(getParam<Real>("CT1_sigma")),
+    _TT1_mob(getParam<Real>("TT1_mob")),
+    _CT1_mob(getParam<Real>("CT1_mob"))
 {
 }
 
@@ -63,8 +67,21 @@ GBAnisotropyMisAng2::calculatedGBMobility(const MisorientationAngleData & s_miso
   bool const & is_twin = s_misorientation_angle._is_twin;
 
   // The low-mobility characteristics of twins are not considered for the time being
-  if (delta_theta <=  _delta_theta_HAGB)
-    gbMob = _GBmob_HAGB * ((1- std::exp(-B * std::pow( delta_theta / _delta_theta_HAGB, n)))); // Eq.8
+  if (delta_theta <=  _delta_theta_HAGB && !is_twin)
+    gbMob = _GBmob_HAGB * ((1 - std::exp(-B * std::pow( delta_theta / _delta_theta_HAGB, n)))); // Eq.8
+  else if (is_twin)
+  {
+    // std::cout << "is_twin " << is_twin << std::endl;
+
+    if (s_misorientation_angle._twin_type == TwinType::TT1)
+    {
+      gbMob = _TT1_mob;
+    }
+    else if (s_misorientation_angle._twin_type == TwinType::CT1)
+    {
+      gbMob = _CT1_mob;
+    }
+  }
 
   return gbMob;
 }

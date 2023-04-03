@@ -1,4 +1,6 @@
-# tar -cvf - case3_EBSD_aveRho_v1/*.e-s???[2].* | pigz -9 -p 20 > case3_EBSD_aveRho_v1_ex.tgz
+# tar -cvf - case1_gbAnisotropy_v1/*.e-s??0?.* | pigz -9 -p 20 > case1_gbAnisotropy_v1_ex.tgz
+
+tar -cvf - case1_gbAnisotropy/*.e.* | pigz -9 -p 20 > case1_gbAnisotropy_ex.tgz
 
 # ACSEDGPolyEBSD PolycrystalStoredEnergyEBSDAction DeformedGrainEBSDMaterial
 

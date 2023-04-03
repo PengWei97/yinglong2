@@ -181,8 +181,8 @@ GBAnisotropyMisAngBase::computerGBParameter()
   // get the GB location based on the GrainTracker in the quadrature point
   const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
 
-  std::vector<unsigned int> orderParameterIndex; // Create a vector of order parameter indices
-  std::vector<unsigned int> grainIDIndex; // Create a vector of grain IDs  
+  std::vector<unsigned int> var_index; // Create a vector of order parameter indices
+  std::vector<unsigned int> grain_id_index; // Create a vector of grain IDs  
 
   for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index)
   {
@@ -191,40 +191,43 @@ GBAnisotropyMisAngBase::computerGBParameter()
     if (grain_id == FeatureFloodCount::invalid_id)
       continue;
 
-    orderParameterIndex.push_back(op_index);
-    grainIDIndex.push_back(grain_id);
+    var_index.push_back(op_index);
+    grain_id_index.push_back(grain_id);
   }
 
- if (_misorientation_anisotropy && grainIDIndex.size() > 1) // at gb boundary or junction
+ if (_misorientation_anisotropy && grain_id_index.size() > 1) // at gb boundary or junction
   {
-    for (unsigned int i = 0; i < grainIDIndex.size() - 1; ++i)
-      for (unsigned int j = i+1; j < grainIDIndex.size(); ++j)
+    for (unsigned int i = 0; i < grain_id_index.size() - 1; ++i)
+      for (unsigned int j = i+1; j < grain_id_index.size(); ++j)
       {
-        auto angles_i = _euler.getEulerAngles(grainIDIndex[i]);
-        auto angles_j = _euler.getEulerAngles(grainIDIndex[j]);
+        auto angles_i = _euler.getEulerAngles(grain_id_index[i]);
+        auto angles_j = _euler.getEulerAngles(grain_id_index[j]);
         _misori_s = MisorientationAngleCalculator::calculateMisorientaion(angles_i, angles_j, _misori_s);
 
-        if (grainIDIndex.size() == 2)
+        if (grain_id_index.size() == 2)
         {
           _misori_angle[_qp] =  _misori_s._misor;
 
+          _twinning_type[_qp] = 0.0;
+
           if (_misori_s._is_twin)
           {
-            if (_misori_s._twin_type == TwinType::TT1) // TwinType::TT1
-              _twinning_type[_qp] = 0.0;
-            else if (_misori_s._twin_type == TwinType::CT1) // TwinType::CT1
+            if (_misori_s._twin_type == TwinType::TT1)
               _twinning_type[_qp] = 1.0;
+            else if (_misori_s._twin_type == TwinType::CT1)
+              _twinning_type[_qp] = 2.0;
           }
+            
         }
 
         if (_misori_s._misor > 1.0)
-          _sigma[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBEnergy(_misori_s);
+          _sigma[var_index[i]][var_index[j]] = calculatedGBEnergy(_misori_s);
 
         if (_gb_mobility_anisotropy && _misori_s._misor > 1.0)
-          _mob[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBMobility(_misori_s);
+          _mob[var_index[i]][var_index[j]] = calculatedGBMobility(_misori_s);
 
-        _sigma[orderParameterIndex[j]][orderParameterIndex[i]] =  _sigma[orderParameterIndex[i]][orderParameterIndex[j]];
-        _mob[orderParameterIndex[j]][orderParameterIndex[i]] =  _mob[orderParameterIndex[i]][orderParameterIndex[j]];
+        _sigma[var_index[j]][var_index[i]] =  _sigma[var_index[i]][var_index[j]];
+        _mob[var_index[j]][var_index[i]] =  _mob[var_index[i]][var_index[j]];
       }    
   }
   
