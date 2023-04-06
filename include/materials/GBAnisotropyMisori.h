@@ -18,9 +18,10 @@
 // Forward Declarations
 
 /**
- * Function[kappa, gamma, m, L] = parameters (sigma, mob, w_GB, sigma0)
- * Parameter determination method is elaborated in Phys. Rev. B, 78(2), 024113, 2008, by N. Moelans
- * Thanks to Prof. Moelans for the explanation of her paper.
+ * GBAnisotropyMisoriBase is created based on GrainTracker for real-time acquisition of
+ * sigma_ij, mob_ij based on misorientation angle.
+ * function 1: GB anisotropy based classic theroies
+ * function 2: Low-energy and low-mobility properties of twin interfaces
  */
 class GBAnisotropyMisori : public GBAnisotropyMisoriBase
 {
@@ -44,6 +45,11 @@ protected:
   
   const Real _GBsigma_HAGB;
   const Real _GBmob_HAGB;
+  
+  const Real _TT1_sigma;
+  const Real _CT1_sigma;
+  const Real _TT1_mob;
+  const Real _CT1_mob;
 
   const GrainTracker & _grain_tracker;
   const EulerAngleProvider & _euler; 

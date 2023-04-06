@@ -19,9 +19,9 @@ GBAnisotropyMisoriBase::validParams()
   params.addCoupledVar("T", 300.0, "Temperature in Kelvin");
   params.addParam<Real>("length_scale", 1.0e-9, "Length scale in m, where default is nm");
   params.addParam<Real>("time_scale", 1.0e-9, "Time scale in s, where default is ns");
-  params.addParam<Real>("sigma_matrix", 0.708, "initial value of sigma, where default is ns");
-  params.addParam<Real>("mob_matrix", 0.01e-10, "initial value of mob, where default is ns");
-  params.addParam<Real>("Q_matrix", 0.23, "initial value of Q, where default is ns");
+  params.addParam<Real>("sigma_matrix", 0.708, "initial value of sigma, where default is J/m^2");
+  params.addParam<Real>("mob_matrix", 0.01e-10, "initial value of mob, where default is m^4/(J*s)");
+  params.addParam<Real>("Q_matrix", 0.23, "initial value of Q, where default is eV");
   params.addRequiredParam<Real>("wGB", "Diffuse GB width in nm");
   params.addRequiredCoupledVarWithAutoBuild(
       "v", "var_name_base", "op_num", "Array of coupled variables");
@@ -88,7 +88,6 @@ GBAnisotropyMisoriBase::computeQpProperties()
 
   computerPFParameters();
 
-  // Interpolate phase field model parameters
   interpolatePFParams();
 }
 
@@ -185,6 +184,7 @@ GBAnisotropyMisoriBase::interpolatePFParams()
       sum_val += Val;
       sum_kappa += _kappa_gamma[m][n] * f_sigma * Val;
       sum_gamma += gamma_value * Val;
+      
       // Following comes from substituting Eq. (36c) from the paper into (36b)
       sum_L += Val * _mob[m][n] * std::exp(-_Q[m][n] / (_kb * _T[_qp])) * f_mob * _mu_qp * _a_g2[n][m] / _sigma[m][n];
     }

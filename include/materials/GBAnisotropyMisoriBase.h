@@ -28,7 +28,7 @@ public:
 protected:
   virtual void computeQpProperties();
 
-  // Set sigma_ij, mob_ij, Q_ij based on misorientation
+  // Set sigma_ij, mob_ij, Q_ij based on misorientation angle
   virtual void computeGBProperties();
 
   // Calculate the model parameters for the phase field
