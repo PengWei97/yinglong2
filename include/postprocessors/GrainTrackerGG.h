@@ -212,6 +212,12 @@ protected:
    */
   std::vector<FeatureData> _feature_sets_old;
 
+  /**
+   * This data structure holds the map of unique and invalid grains from the previous time step.
+   */
+   std::map<std::vector<unsigned int>, std::vector<unsigned int>> _invalid_feature_map;
+
+
   /// An optional IC UserObject which can provide initial data structures to this object.
   const PolycrystalUserObjectBase * const _poly_ic_uo;
 
@@ -232,8 +238,7 @@ protected:
    * the initial callback to newGrainCreated() nor does it get triggered for splitting grains.
    */
   const bool _error_on_grain_creation;
-
-private:
+  
   /// Holds the first unique grain index when using _reserve_op (all the remaining indices are sequential)
   unsigned int _reserve_grain_first_index;
 

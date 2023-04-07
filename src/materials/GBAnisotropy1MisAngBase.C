@@ -198,7 +198,6 @@ GBAnisotropy1MisAngBase::computerGBParameter()
 
   std::vector<unsigned int> orderParameterIndex; // Create a vector of order parameter indices
   std::vector<unsigned int> grainIDIndex; // Create a vector of grain IDs  
-
   for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index)
   {
     auto grain_id = op_to_grains[op_index]; // grain id
@@ -210,38 +209,38 @@ GBAnisotropy1MisAngBase::computerGBParameter()
     grainIDIndex.push_back(grain_id);
   }
 
- if (_misorientation_anisotropy && grainIDIndex.size() > 1) // at gb boundary or junction  && _t_step > 1
-  {
-    for (unsigned int i = 0; i < grainIDIndex.size() - 1; ++i)
-      for (unsigned int j = i+1; j < grainIDIndex.size(); ++j)
+  // calculate the misorientation angle and GB anisotropy (GB energy and mobility)
+  for (unsigned int i = 0; i < grainIDIndex.size() - 1; ++i)
+    for (unsigned int j = i+1; j < grainIDIndex.size(); ++j)
+    {
+      auto angles_i = _euler.getEulerAngles(grainIDIndex[i]);
+      auto angles_j = _euler.getEulerAngles(grainIDIndex[j]);    
+      _s_misoriTwin = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _s_misoriTwin, "hcp");
+
+      if (grainIDIndex.size() == 2)
       {
-        auto angles_i = _euler.getEulerAngles(grainIDIndex[i]);
-        auto angles_j = _euler.getEulerAngles(grainIDIndex[j]);
-        _s_misoriTwin = CalculateMisorientationAngle::calculateMisorientaion(angles_i, angles_j, _s_misoriTwin, "hcp", _degree);
-
-        if (grainIDIndex.size() == 2)
+        _misAngle[_qp] =  _s_misoriTwin.misor;
+        if (_s_misoriTwin.isTwinning)
         {
-          _misAngle[_qp] =  _s_misoriTwin.misor;
-          if (_s_misoriTwin.isTwinning)
-          {
-            if (_s_misoriTwin.twinType == "twin_type0")
-              _twType[_qp] = 0.0;
-            else if (_s_misoriTwin.twinType == "twin_type1")
-              _twType[_qp] = 1.0;
-          }
+          if (_s_misoriTwin.twinType == "twin_type0")
+            _twType[_qp] = 0.0;
+          else if (_s_misoriTwin.twinType == "twin_type1")
+            _twType[_qp] = 1.0;
         }
+      }
 
-        if (_s_misoriTwin.misor > 1.0)
+      if (_misorientation_anisotropy && grainIDIndex.size() > 1)
+      {
+        if (_s_misoriTwin.misor > 0.1)
           _sigma[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBEnergy(_s_misoriTwin);
 
-        if (_gbMobility_anisotropy && _s_misoriTwin.misor > 1.0)
+        if (_gbMobility_anisotropy && _s_misoriTwin.misor > 0.1)
           _mob[orderParameterIndex[i]][orderParameterIndex[j]] = calculatedGBMobility(_s_misoriTwin);
 
         _sigma[orderParameterIndex[j]][orderParameterIndex[i]] =  _sigma[orderParameterIndex[i]][orderParameterIndex[j]];
         _mob[orderParameterIndex[j]][orderParameterIndex[i]] =  _mob[orderParameterIndex[i]][orderParameterIndex[j]];
-      }    
-  }
-  
+      }          
+    }
 }
 
 Real

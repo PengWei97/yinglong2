@@ -1,9 +1,12 @@
 #include "CalculateMisorientationAngle.h"
 
 misoriAngle_isTwining
-CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, misoriAngle_isTwining & s, const std::string & CrystalType, Real degree)
+CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, misoriAngle_isTwining & s, const std::string & CrystalType)
 {
+  const Real degree = 1.7453e-02;
   Real tolerance_mis = 3.90;
+  Real misor_twinning = tolerance_mis + 1.0;
+  Real value_acos = 0.0;
   const quatReal & q1 = Euler1.toQuaternion();
   const quatReal & q2 = Euler2.toQuaternion();
   const quatReal mori_q1q2 = itimesQuaternion(q1, q2); // inv(q1)*q2
@@ -13,12 +16,19 @@ CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, Euler
   std::vector<quatReal> qss = getKeyQuat("getSSymm");
 
   // calculate misorientation angle
-  s.misor = (Real)(2.0*std::acos(dotQuaternion(q1, q2, qcs, qss)))/degree;  
+  value_acos = dotQuaternion(q1, q2, qcs, qss);
+  if (value_acos <= 1.0 && value_acos >= -1.0)
+    s.misor = (Real)(2.0*std::acos(value_acos))/degree;
+  else
+    s.misor =  tolerance_mis + 1;
 
   for (unsigned i = 0; i < q3_twin.size(); ++i)
   {
-    Real misor_twinning = (Real)(2.0*std::acos(dotQuaternion(mori_q1q2, q3_twin[i], qcs, qcs)))/degree;
-    s.isTwinning = (misor_twinning < tolerance_mis); // Judging whether it is a twin boundary
+    value_acos = dotQuaternion(mori_q1q2, q3_twin[i], qcs, qcs);
+    if (value_acos <= 1.0 && value_acos >= -1.0)
+      misor_twinning = (Real)(2.0*std::acos(value_acos))/degree;
+
+    s.isTwinning = (bool)(misor_twinning < tolerance_mis); // Judging whether it is a twin boundary
 
     // Determine which type of twin boundary 0 ~ TT1 (tensile twins), 1 ~ CT1 (compression twins)
     if (s.isTwinning) 

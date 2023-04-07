@@ -19,7 +19,7 @@ protected:
   virtual void remapGrains();
 
   // Get the adjacent grain id, used to calculate the GB misorientation angle
-  unsigned int getAdjacentID(const FeatureData & grain_i);  
+  unsigned int getTopoRelaGrainID(const FeatureData & grain_i);  
 
   // re-merge grains due to misorientation angle from euler angles calculation
   void mergeGrainsBasedMisorientation();  
@@ -29,4 +29,6 @@ protected:
 
   const EulerAngleProvider & _euler;
   misoriAngle_isTwining _s_misoriTwin;
+
+  std::vector<unsigned int> _inactive_grains_id;
 };

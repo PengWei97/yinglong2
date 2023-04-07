@@ -43,7 +43,7 @@ dataLoad(std::istream & stream, GrainTrackerGG::PartialFeatureData & feature, vo
   loadHelper(stream, feature.status, context);
 }
 
-registerMooseObject("PhaseFieldApp", GrainTrackerGG);
+registerMooseObject("yinglongApp", GrainTrackerGG);
 
 InputParameters
 GrainTrackerGG::validParams()
@@ -96,7 +96,8 @@ GrainTrackerGG::GrainTrackerGG(const InputParameters & parameters)
     _reserve_grain_first_index(0),
     _old_max_grain_id(0),
     _max_curr_grain_id(declareRestartableData<unsigned int>("max_curr_grain_id", invalid_id)),
-    _is_transient(_subproblem.isTransient())
+    _is_transient(_subproblem.isTransient()),
+    _invalid_feature_map(declareRestartableData<std::map<std::vector<unsigned int>, std::vector<unsigned int>>>("invalid_feature_map"))
 {
   if (_tolerate_failure)
     paramInfo("tolerate_failure",
@@ -233,6 +234,12 @@ GrainTrackerGG::initialize()
    */
   if (!_first_time)
     _feature_sets_old.swap(_feature_sets);
+  else
+  {
+    std::cout << "GrainTrackerGG::initialize()" << std::endl;
+    _invalid_feature_map[{0}].push_back(1);
+    _invalid_feature_map[{0}].push_back(2);
+  }
 
   FeatureFloodCount::initialize();
 }
@@ -871,7 +878,7 @@ GrainTrackerGG::trackGrains()
 void 
 GrainTrackerGG::createAdjacentIDVector() // by weipeng
 {
-
+  
   for (const auto grain_num_i : index_range(_feature_sets)) 
   {
     auto & grain_i = _feature_sets[grain_num_i];
@@ -886,10 +893,12 @@ GrainTrackerGG::createAdjacentIDVector() // by weipeng
       if (grain_i._id < grain_j._id && grain_j._status != Status::INACTIVE 
           && grain_i.boundingBoxesIntersect(grain_j) && grain_i.halosIntersect(grain_j))
       {
-        grain_i._adjacent_id.push_back(grain_num_j); // It must be noted that the number stored in _adjacent_id is _feature_sets[i], 
-        grain_j._adjacent_id.push_back(grain_num_i); // and the ID of the adjacent grain is _feature_sets[i]._id
+        grain_i._adjacent_id.push_back(grain_j._id); // It must be noted that the number stored in _adjacent_id is _feature_sets[i],
+        grain_j._adjacent_id.push_back(grain_i._id); // and the ID of the adjacent grain is _feature_sets[i]._id
       }
     }
+
+    std::sort(grain_i._adjacent_id.begin(), grain_i._adjacent_id.end());
   }
 }
 
