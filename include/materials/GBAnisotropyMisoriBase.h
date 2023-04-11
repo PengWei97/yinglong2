@@ -41,9 +41,9 @@ protected:
 
   const Real _length_scale;
   const Real _time_scale;
-  const Real _sigma_matrix;
-  const Real _mob_matrix;
-  const Real _Q_matrix;
+  const Real _GBsigma_HAGB;
+  const Real _GBmob_HAGB;
+  const Real _Q_HAGB;
   const Real _wGB;
 
   const FileName _Anisotropic_GB_file_name;

@@ -43,9 +43,6 @@ protected:
   // used to store orientation structure, including misorientation angle, istwinnig, twinning type;
   MisorientationAngleData _misori_s;
   
-  const Real _GBsigma_HAGB;
-  const Real _GBmob_HAGB;
-  
   const Real _TT1_sigma;
   const Real _CT1_sigma;
   const Real _TT1_mob;

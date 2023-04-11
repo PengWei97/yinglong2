@@ -18,8 +18,6 @@ GBAnisotropyMisori::validParams()
   InputParameters params = GBAnisotropyMisoriBase::validParams();
   params.addClassDescription(
       "Computes necessary material properties for the anisotropic grain growth model");
-  params.addParam<Real>("GBsigma_HAGB", 0.9, "GB energy of a high angle GB");
-  params.addParam<Real>("GBmob_HAGB", 2.5e-6, "GB mobility of a high angle GB");
   params.addParam<Real>("TT1_sigma",  0.9, "Twin boundary energy for {10-12} tensile twin (type 1) based on MD, J/m^2");
   params.addParam<Real>("CT1_sigma",  0.9, "Twin boundary energy for {11-22} compresssion twin (type 1) based on MD, J/m^2");  
   params.addParam<Real>("TT1_mob", 2.5e-6, "Twin boundary mobility for {10-12} tensile twin (type 1) based on experiment, m^4/(J*s)");
@@ -37,8 +35,6 @@ GBAnisotropyMisori::validParams()
 
 GBAnisotropyMisori::GBAnisotropyMisori(const InputParameters & parameters)
   : GBAnisotropyMisoriBase(parameters),
-    _GBsigma_HAGB(getParam<Real>("GBsigma_HAGB")),
-    _GBmob_HAGB(getParam<Real>("GBmob_HAGB")),
     _TT1_sigma(getParam<Real>("TT1_sigma")),
     _CT1_sigma(getParam<Real>("CT1_sigma")),
     _TT1_mob(getParam<Real>("TT1_mob")),
@@ -144,8 +140,6 @@ GBAnisotropyMisori::computeGBProperties()
       }
     
   }
-  else if (grain_id_index.size() == 1)
-    std::fill(_mob.begin(), _mob.end(), std::vector<Real>(_op_num, 0.0));
 }
 
 Real

@@ -19,9 +19,9 @@ GBAnisotropyMisoriBase::validParams()
   params.addCoupledVar("T", 300.0, "Temperature in Kelvin");
   params.addParam<Real>("length_scale", 1.0e-9, "Length scale in m, where default is nm");
   params.addParam<Real>("time_scale", 1.0e-9, "Time scale in s, where default is ns");
-  params.addParam<Real>("sigma_matrix", 0.708, "initial value of sigma, where default is J/m^2");
-  params.addParam<Real>("mob_matrix", 0.01e-10, "initial value of mob, where default is m^4/(J*s)");
-  params.addParam<Real>("Q_matrix", 0.23, "initial value of Q, where default is eV");
+  params.addParam<Real>("GBsigma_HAGB", 0.9, "GB energy of a high angle GB");
+  params.addParam<Real>("GBmob_HAGB", 2.5e-6, "GB mobility of a high angle GB");
+  params.addParam<Real>("Q_HAGB", 0.23, "initial value of Q, where default is eV");
   params.addRequiredParam<Real>("wGB", "Diffuse GB width in nm");
   params.addRequiredCoupledVarWithAutoBuild(
       "v", "var_name_base", "op_num", "Array of coupled variables");
@@ -33,9 +33,9 @@ GBAnisotropyMisoriBase::GBAnisotropyMisoriBase(const InputParameters & parameter
     _mesh_dimension(_mesh.dimension()),
     _length_scale(getParam<Real>("length_scale")),
     _time_scale(getParam<Real>("time_scale")),
-    _sigma_matrix(getParam<Real>("sigma_matrix")),
-    _mob_matrix(getParam<Real>("mob_matrix")),
-    _Q_matrix(getParam<Real>("Q_matrix")),
+    _GBsigma_HAGB(getParam<Real>("GBsigma_HAGB")),
+    _GBmob_HAGB(getParam<Real>("GBmob_HAGB")),
+    _Q_HAGB(getParam<Real>("Q_HAGB")),
     _wGB(getParam<Real>("wGB")),
     _T(coupledValue("T")),
     _kappa(declareProperty<Real>("kappa_op")),
@@ -70,9 +70,9 @@ void
 GBAnisotropyMisoriBase::computeQpProperties()
 {
   // Initialize sigma_ij, mob_ij, Q_ij
-  std::fill(_sigma.begin(), _sigma.end(), std::vector<Real>(_op_num,_sigma_matrix));
-  std::fill(_mob.begin(), _mob.end(), std::vector<Real>(_op_num, _mob_matrix));
-  std::fill(_Q.begin(), _Q.end(), std::vector<Real>(_op_num, _Q_matrix));
+  std::fill(_sigma.begin(), _sigma.end(), std::vector<Real>(_op_num,_GBsigma_HAGB*0.01));
+  std::fill(_mob.begin(), _mob.end(), std::vector<Real>(_op_num, _GBmob_HAGB*0.01));
+  std::fill(_Q.begin(), _Q.end(), std::vector<Real>(_op_num, _Q_HAGB));
 
   computeGBProperties();
 
