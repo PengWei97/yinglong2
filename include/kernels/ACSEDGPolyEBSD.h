@@ -37,6 +37,8 @@ public:
 protected:
   virtual Real computeDFDOP(PFFunctionType type);
 
+  virtual Real getGNDsFromEBSD(const unsigned int & grain_id);
+
   const unsigned int _op_num;
 
   const std::vector<const VariableValue *> _vals;

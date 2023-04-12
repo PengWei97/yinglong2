@@ -30,6 +30,8 @@ public:
 protected:
   virtual void computeQpProperties();
 
+  virtual Real getGNDsFromEBSD(const unsigned int & grain_id);
+
   const unsigned int _op_num; // total number of grains
   const std::vector<const VariableValue *> _vals; // order parameter values
 

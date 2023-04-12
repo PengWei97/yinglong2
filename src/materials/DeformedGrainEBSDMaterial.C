@@ -58,32 +58,38 @@ DeformedGrainEBSDMaterial::computeQpProperties()
   const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
 
   Real rho_i;
-  Real rho0 = 0.0;
-
-  // considering concurrent recovery
-  const Real rho_end = 3.0e7 * (_length_scale * _length_scale); // the minimum GND due to recovery 1/m^2
-  auto & time_current = _fe_problem.time(); // current simulation time s
 
   _rho_eff[_qp] = 0.0;
   for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index)
   {
+    auto grain_id = op_to_grains[op_index];
     if (op_to_grains[op_index] == FeatureFloodCount::invalid_id)
       continue;
 
-    auto grain_id = op_to_grains[op_index];
+    rho_i = getGNDsFromEBSD(grain_id);
 
-    if (grain_id < _GNDs_provider.getGrainNum())
-      rho_i = _GNDs_provider.getAvgData(grain_id)._custom[0] * (_length_scale * _length_scale); // GNDs for each grain, 1/m^2 
-    else
-      rho_i = 2.0e15 * (_length_scale * _length_scale); // TODO - need to be more physically based
-
-    if (_concurrent_recovery && rho_i > rho_end)
-      rho_i = (rho_i - rho_end) * std::exp(-8.535e-4 * time_current) + rho_end; // fitting function considering concurrent recovery
-
-    rho0 += rho_i * (*_vals[op_index])[_qp] * (*_vals[op_index])[_qp];
+    _rho_eff[_qp] += rho_i * (*_vals[op_index])[_qp] * (*_vals[op_index])[_qp];
   }
 
-  _rho_eff[_qp] = rho0 / SumEtai2;
+  _rho_eff[_qp] /= SumEtai2;
 
   _beta[_qp] = 0.5 * _Elas_Mod * _Burg_vec * _Burg_vec * _JtoeV * _length_scale;
+}
+
+Real
+DeformedGrainEBSDMaterial::getGNDsFromEBSD(const unsigned int & grain_id)
+{
+  // considering concurrent recovery
+  const Real rho_end = 3.0e7 * (_length_scale * _length_scale); // the minimum GND due to recovery 1/m^2
+  auto & time_current = _fe_problem.time(); // current simulation time s
+
+  Real rho_i = 2.0e15 * (_length_scale * _length_scale); // TODO - need to be more physically based
+
+  if (grain_id < _GNDs_provider.getGrainNum())
+    rho_i = _GNDs_provider.getAvgData(grain_id)._custom[0] * (_length_scale * _length_scale); // GNDs for each grain, 1/m^2 
+
+  if (_concurrent_recovery && rho_i > rho_end)
+    rho_i = (rho_i - rho_end) * std::exp(-8.535e-4 * time_current) + rho_end; // fitting function considering concurrent recovery  
+
+  return rho_i;
 }
