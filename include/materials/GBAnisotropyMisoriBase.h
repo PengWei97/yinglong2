@@ -1,43 +1,55 @@
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
+
 #pragma once
 
 #include "Material.h"
 
-// GBAnisotropyMOP1 -- This version of GB energy and GB mobility anisotropy is introduced by the txt file.
+// Forward Declarations
 
 /**
  * Function[kappa, gamma, m, L] = parameters (sigma, mob, w_GB, sigma0)
- * Parameter determination method is elaborated in Phys. Rev. B, 78(2), 024113, 2008, by N. Moelans for old MOP-PF model
+ * Parameter determination method is elaborated in Phys. Rev. B, 78(2), 024113, 2008, by N. Moelans
  * Thanks to Prof. Moelans for the explanation of her paper.
  */
-
-class GBAnisotropyMOP1 : public Material
+class GBAnisotropyMisoriBase : public Material
 {
 public:
   static InputParameters validParams();
 
-  GBAnisotropyMOP1(const InputParameters & parameters);
+  GBAnisotropyMisoriBase(const InputParameters & parameters);
 
 protected:
   virtual void computeQpProperties();
 
-  // Get GB anisotropy based on file
-  virtual void getGBAnisotropyFromFile();
+  // Set sigma_ij, mob_ij, Q_ij based on misorientation angle
+  virtual void computeGBProperties();
 
-  // Calculation of Phase Field Model Parameters Based on Grain Boundary Energy (sigma_ij) and Grain Boundary Mobility (mob_ij)
-  virtual void computerModelParameter();
+  // Calculate the model parameters for the phase field
+  virtual void computerPFParameters();
+
+  // Interpolate phase field model parameters
+  virtual void interpolatePFParams();
+
+  virtual void computerPFGBIsotropy();
 
   const unsigned int _mesh_dimension;
 
   const Real _length_scale;
   const Real _time_scale;
-  const Real _M_V;
-  const Real _delta_sigma;
-  const Real _delta_mob;
+  const Real _GBsigma_HAGB;
+  const Real _GBmob_HAGB;
+  const Real _Q_HAGB;
   const Real _wGB;
+  const Real _scale_factor_matrix;
 
   const FileName _Anisotropic_GB_file_name;
-
-  const bool _inclination_anisotropy;
 
   const VariableValue & _T;
 
@@ -51,10 +63,6 @@ protected:
   MaterialProperty<Real> & _gamma;
   MaterialProperty<Real> & _L;
   MaterialProperty<Real> & _mu;
-
-  MaterialProperty<Real> & _molar_volume;
-  MaterialProperty<Real> & _entropy_diff;
-  MaterialProperty<Real> & _act_wGB;
 
   const Real _kb;
   const Real _JtoeV;

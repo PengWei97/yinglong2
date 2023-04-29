@@ -1,9 +1,12 @@
 #include "CalculateMisorientationAngle.h"
 
-misoriAngle_isTwining
-CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, misoriAngle_isTwining & s, const std::string & CrystalType, Real degree)
+MisorientationAngleData
+CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, EulerAngles & Euler2, MisorientationAngleData & s, const std::string & CrystalType)
 {
+  const Real degree = 1.7453e-02;
   Real tolerance_mis = 3.90;
+  Real misor_twinning = tolerance_mis + 1.0;
+  Real value_acos = 0.0;
   const quatReal & q1 = Euler1.toQuaternion();
   const quatReal & q2 = Euler2.toQuaternion();
   const quatReal mori_q1q2 = itimesQuaternion(q1, q2); // inv(q1)*q2
@@ -13,19 +16,36 @@ CalculateMisorientationAngle::calculateMisorientaion(EulerAngles & Euler1, Euler
   std::vector<quatReal> qss = getKeyQuat("getSSymm");
 
   // calculate misorientation angle
-  s.misor = (Real)(2.0*std::acos(dotQuaternion(q1, q2, qcs, qss)))/degree;  
+  value_acos = dotQuaternion(q1, q2, qcs, qss);
+  if (value_acos <= 1.0 && value_acos >= -1.0)
+    s._misor = (Real)(2.0*std::acos(value_acos))/degree;
+  else
+    s._misor =  tolerance_mis + 1;
 
   for (unsigned i = 0; i < q3_twin.size(); ++i)
   {
-    Real misor_twinning = (Real)(2.0*std::acos(dotQuaternion(mori_q1q2, q3_twin[i], qcs, qcs)))/degree;
-    s.isTwinning = (misor_twinning < tolerance_mis); // Judging whether it is a twin boundary
+    value_acos = dotQuaternion(mori_q1q2, q3_twin[i], qcs, qcs);
+    if (value_acos <= 1.0 && value_acos >= -1.0)
+      misor_twinning = (Real)(2.0*std::acos(value_acos))/degree;
+
+    s._is_twin = (bool)(misor_twinning < tolerance_mis); // Judging whether it is a twin boundary
 
     // Determine which type of twin boundary 0 ~ TT1 (tensile twins), 1 ~ CT1 (compression twins)
-    if (s.isTwinning) 
+    if (s._is_twin && i == 0)
     {
-      s.twinType = "twin_type" + std::to_string(i); 
+      s._twin_type = TwinType::TT1;
       break;
-    }
+    } 
+    else if (s._is_twin && i == 1)
+    {
+      s._twin_type = TwinType::ST1;
+      break;
+    } 
+      
+    // {
+    //   s._twin_type = "twin_type" + std::to_string(i); 
+    //   break;
+    // }
   }
   return s;
 }
@@ -136,12 +156,20 @@ CalculateMisorientationAngle::itimesQuaternion(const quatReal & q1, const quatRe
 Real
 CalculateMisorientationAngle::dotOuterQuaternion(const quatReal & rot1, const std::vector<quatReal> & rot2)
 {
-  std::vector<Real> d_vec(rot2.size());
+  // std::vector<Real> d_vec(rot2.size());
+
+  Real d = 0;
+  Real temp = 0;
 
   for (unsigned int i = 0; i < rot2.size(); ++i)
-    d_vec[i] = std::abs(rot1.w()*rot2[i].w() + rot1.x()*rot2[i].x() + rot1.y()*rot2[i].y() + rot1.z()*rot2[i].z()); // rot1 * rot2'
+  {
+    // d_vec[i] = std::abs(rot1.w()*rot2[i].w() + rot1.x()*rot2[i].x() + rot1.y()*rot2[i].y() + rot1.z()*rot2[i].z()); // rot1 * rot2'
+    temp = std::abs(rot1.w()*rot2[i].w() + rot1.x()*rot2[i].x() + rot1.y()*rot2[i].y() + rot1.z()*rot2[i].z());
+    if (temp > d)
+      d = temp;
+  }
 
-  Real d = *std::max_element(d_vec.begin(), d_vec.end());
+  // Real d = *std::max_element(d_vec.begin(), d_vec.end());
 
   return d;
 }

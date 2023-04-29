@@ -96,11 +96,10 @@ FeatureDataVectorPostprocessor::execute()
   for (MooseIndex(num_features) feature_num = 0; feature_num < num_features; ++feature_num)
   {
     auto var_num = _feature_counter.getFeatureVar(feature_num);
-    auto feature_id = _feature_counter.getFeatureID(feature_num);
-    auto adjacent_num = _feature_counter.getAdjacentGrainNum(feature_num);
+    auto adjacent_num = _feature_counter.getNumAdjacentGrains(feature_num);
+    _feature_id[feature_num] = feature_num;
     if (var_num != FeatureFloodCount::invalid_id)
     {
-      _feature_id[feature_num] = feature_num;
       _var_num[feature_num] = var_num;
       _adjacent_num[feature_num] = adjacent_num;
     }
