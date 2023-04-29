@@ -23,6 +23,7 @@ GBAnisotropyMisoriBase::validParams()
   params.addParam<Real>("GBmob_HAGB", 2.5e-6, "GB mobility of a high angle GB");
   params.addParam<Real>("Q_HAGB", 0.23, "initial value of Q, where default is eV");
   params.addRequiredParam<Real>("wGB", "Diffuse GB width in nm");
+  params.addParam<Real>("scale_factor_matrix", 1.0e-2,"scale factor for matrix sigma or mob");
   params.addRequiredCoupledVarWithAutoBuild(
       "v", "var_name_base", "op_num", "Array of coupled variables");
   return params;
@@ -37,6 +38,7 @@ GBAnisotropyMisoriBase::GBAnisotropyMisoriBase(const InputParameters & parameter
     _GBmob_HAGB(getParam<Real>("GBmob_HAGB")),
     _Q_HAGB(getParam<Real>("Q_HAGB")),
     _wGB(getParam<Real>("wGB")),
+    _scale_factor_matrix(getParam<Real>("scale_factor_matrix")),
     _T(coupledValue("T")),
     _kappa(declareProperty<Real>("kappa_op")),
     _gamma(declareProperty<Real>("gamma_asymm")),
@@ -70,8 +72,8 @@ void
 GBAnisotropyMisoriBase::computeQpProperties()
 {
   // Initialize sigma_ij, mob_ij, Q_ij
-  std::fill(_sigma.begin(), _sigma.end(), std::vector<Real>(_op_num,_GBsigma_HAGB*0.01));
-  std::fill(_mob.begin(), _mob.end(), std::vector<Real>(_op_num, _GBmob_HAGB*0.01));
+  std::fill(_sigma.begin(), _sigma.end(), std::vector<Real>(_op_num,_GBsigma_HAGB));
+  std::fill(_mob.begin(), _mob.end(), std::vector<Real>(_op_num, _GBmob_HAGB));
   std::fill(_Q.begin(), _Q.end(), std::vector<Real>(_op_num, _Q_HAGB));
 
   computeGBProperties();
@@ -86,9 +88,10 @@ GBAnisotropyMisoriBase::computeQpProperties()
                                              _length_scale)); // Convert to nm^4/(eV*ns);
     } 
 
-  computerPFParameters();
+    computerPFParameters();
 
-  interpolatePFParams();
+    interpolatePFParams();
+
 }
 
 void
@@ -157,7 +160,6 @@ GBAnisotropyMisoriBase::computerPFParameters()
       _a_g2[m][n] = a_star; // upper triangle stores "a" data.
       _a_g2[n][m] = g2;     // lower triangle stores "g2" data.
     }
-
 }
 
 void
@@ -194,4 +196,17 @@ GBAnisotropyMisoriBase::interpolatePFParams()
   _gamma[_qp] = sum_gamma / sum_val;
   _L[_qp] = sum_L / sum_val;
   _mu[_qp] = _mu_qp;
+}
+
+void
+GBAnisotropyMisoriBase::computerPFGBIsotropy()
+{
+  const Real length_scale4 = _length_scale * _length_scale * _length_scale * _length_scale;
+  Real sigma_iso = _GBsigma_HAGB * _JtoeV * _length_scale * _length_scale;
+  Real mob_iso = _GBmob_HAGB * _time_scale / (_JtoeV * length_scale4) * std::exp(-_Q_HAGB / (_kb * _T[_qp]));
+
+  _kappa[_qp] = 3.0 / 4.0 * sigma_iso * _wGB;
+  _gamma[_qp] = 1.5;
+  _L[_qp] = 4.0 / 3.0 * mob_iso / _wGB;
+  _mu[_qp] = 3.0 / 4.0 * 1.0 / 0.125 * sigma_iso / _wGB;
 }

@@ -37,6 +37,8 @@ protected:
   // Interpolate phase field model parameters
   virtual void interpolatePFParams();
 
+  virtual void computerPFGBIsotropy();
+
   const unsigned int _mesh_dimension;
 
   const Real _length_scale;
@@ -45,6 +47,7 @@ protected:
   const Real _GBmob_HAGB;
   const Real _Q_HAGB;
   const Real _wGB;
+  const Real _scale_factor_matrix;
 
   const FileName _Anisotropic_GB_file_name;
 
