@@ -39,6 +39,7 @@ protected:
   const Real _time_scale;
   const Real _Elas_Mod; // the elastic modulus
   const Real _Burg_vec; // the Length of Burger's Vector
+  const Real _stored_factor;
   const Real _JtoeV; // Joule to eV conversion
   const bool _concurrent_recovery;
  

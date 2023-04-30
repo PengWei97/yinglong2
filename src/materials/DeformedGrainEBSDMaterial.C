@@ -22,6 +22,7 @@ DeformedGrainEBSDMaterial::validParams()
   params.addParam<Real>("time_scale", 1.0e-6, "Time scale in sec, where default is micro sec");
   params.addParam<Real>("Elas_Mod", 2.50e10, "Elastic Modulus in J/m^3");
   params.addParam<Real>("Burg_vec", 3.0e-10, "Length of Burger Vector in m");
+  params.addParam<Real>("stored_factor", 0.5, "the scaling factor in stored energy function"); 
   params.addParam<bool>("concurrent_recovery", false, "The concurrent recovery would be considered if true");
   params.addRequiredParam<UserObjectName>("grain_tracker",
                                           "The GrainTracker UserObject to get values from.");
@@ -37,6 +38,7 @@ DeformedGrainEBSDMaterial::DeformedGrainEBSDMaterial(const InputParameters & par
     _time_scale(getParam<Real>("time_scale")),
     _Elas_Mod(getParam<Real>("Elas_Mod")),
     _Burg_vec(getParam<Real>("Burg_vec")),
+    _stored_factor(getParam<Real>("stored_factor")),
     _JtoeV(6.24150974e18),
     _concurrent_recovery(getParam<bool>("concurrent_recovery")),
     _beta(declareProperty<Real>("beta")),
@@ -73,7 +75,7 @@ DeformedGrainEBSDMaterial::computeQpProperties()
 
   _rho_eff[_qp] /= SumEtai2;
 
-  _beta[_qp] = 0.5 * _Elas_Mod * _Burg_vec * _Burg_vec * _JtoeV * _length_scale;
+  _beta[_qp] = _stored_factor * _Elas_Mod * _Burg_vec * _Burg_vec * _JtoeV * _length_scale;
 }
 
 Real
@@ -85,6 +87,10 @@ DeformedGrainEBSDMaterial::getGNDsFromEBSD(const unsigned int & grain_id)
 
   Real rho_i = 2.0e15 * (_length_scale * _length_scale); // TODO - need to be more physically based
 
+  // if (grain_id == 130) // TODO: need to merge based on EBSD data
+  //   rho_i = 3.0 * _GNDs_provider.getAvgData(grain_id)._custom[0] * (_length_scale * _length_scale);
+  // else if (grain_id == 127) // TODO: need to merge based on EBSD data
+  //   rho_i = 0.5 * (_GNDs_provider.getAvgData(grain_id)._custom[0] + _GNDs_provider.getAvgData(129)._custom[0]) * (_length_scale * _length_scale);
   if (grain_id < _GNDs_provider.getGrainNum())
     rho_i = _GNDs_provider.getAvgData(grain_id)._custom[0] * (_length_scale * _length_scale); // GNDs for each grain, 1/m^2 
 
