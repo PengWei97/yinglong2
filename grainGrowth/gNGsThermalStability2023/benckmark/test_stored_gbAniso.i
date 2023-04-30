@@ -47,7 +47,7 @@ my_ct1_mob = 1.70e-13 # 6.4e-13
   [ebsd_mesh]
     type = EBSDMeshGenerator
     # EBSD Data with GNDs during isothermal annealing with GNDs at 700℃ 
-    filename = bm_loc3_10min_Ti700_rho.inl # bm_loc3_noTwin_10min_Ti700_rho_v1.inl # bm_loc3_10min_Ti700_rho_v4.inl 
+    filename = case_loc3_10min_Ti700_rho.inl # case_loc3_noTwin_10min_Ti700_rho_v1.inl 
   []
   parallel_type = distributed
 []
