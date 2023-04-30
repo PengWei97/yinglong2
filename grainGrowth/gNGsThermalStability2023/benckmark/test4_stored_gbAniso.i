@@ -6,9 +6,6 @@
 # case4_1, GBmob_HAGB = 6.0e-13, stored_factor = 0.5, no stored energy, my_tt1_mob = 2.55e-13, my_ct1_mob = 1.70e-13, V4 + 人工合并 + 人工设定TW2 3.0 bm_loc3_noTwin_10min_Ti700_rho_v1 running
 # case5_1, GBmob_HAGB = 6.0e-13, stored_factor = 0.5, no stored energy, my_tt1_mob = 2.55e-13, my_ct1_mob = 1.70e-13, V4 + 人工合并 + 人工设定TW2 3.0 bm_loc3_10min_Ti700_rho_v4.inl running
 
-# my_filename = "case1_9"
-# my_filename2 = "case1_9_3"
-
 my_filename = "case5_1"
 my_filename2 = "case5_1"
 

@@ -1,15 +1,10 @@
-# GBAnisotropyMisori + EBSD data
-# /home/pw-moose/projects/yinglong/examples/gb_anisotropy_based_misorientation_1/.i
-# tw1: scale_factor_matrix = 1.0, my_tt1_mob = 2.4e-12
-# tw2: scale_factor_matrix = 1.0, my_tt1_mob = 3.0e-13
-# tw3: scale_factor_matrix = 1.0, my_tt1_mob = 1.2e-12
+# GBAnisotropyMisori + stored energy + EBSD data 
 
-# stored_gbAniso_tw1: scale_factor_matrix = 1.0, my_tt1_mob = 1.2e-12 + stored energy
+my_filename = "case5_1"
+my_filename2 = "case5_1"
 
-my_filename = "stored_gbAniso_tw1_1"
-
-my_tt1_mob = 1.2e-12 #  3.0e-14
-my_ct1_mob = 6.4e-13 # 6.4e-13
+my_tt1_mob = 1.28e-13 # 3.0e-14
+my_ct1_mob = 1.70e-13 # 6.4e-13
 
 [Materials]
   [./CuGrGranisotropic]
@@ -18,10 +13,10 @@ my_ct1_mob = 6.4e-13 # 6.4e-13
     wGB = 1.0
   
     GBsigma_HAGB = 0.9565
-    GBmob_HAGB = 2.4e-12
+    GBmob_HAGB = 6.0e-13
 
-    TT1_sigma = 0.1019
-    CT1_sigma = 0.0616
+    TT1_sigma = 0.276 # 0.1019 0.3109 0.276
+    CT1_sigma = 0.291 # 0.0616 0.1848 0.291
     TT1_mob = ${my_tt1_mob}
     CT1_mob = ${my_ct1_mob}
 
@@ -35,6 +30,7 @@ my_ct1_mob = 6.4e-13 # 6.4e-13
   [../]
   [./deformed]
     type = DeformedGrainEBSDMaterial
+    stored_factor = 0.5
     GNDs_provider = ebsd_reader
     output_properties = 'rho_eff'
     outputs = my_exodus
@@ -45,13 +41,13 @@ my_ct1_mob = 6.4e-13 # 6.4e-13
   [ebsd_mesh]
     type = EBSDMeshGenerator
     # EBSD Data with GNDs during isothermal annealing with GNDs at 700℃ 
-    filename = debug_loc3_tw1_10min_Ti700_rho.inl
+    filename = input_loc3_tw1_10min_Ti700_rho.inl
   []
   parallel_type = distributed
 []
 
 [GlobalParams]
-  op_num = 10
+  op_num = 12
   var_name_base = gr
 
   length_scale = 1.0e-6
@@ -89,11 +85,11 @@ my_ct1_mob = 6.4e-13 # 6.4e-13
     euler_angle_provider = ebsd_reader
     
   [../]
-  # [./term]
-  #   type = Terminator
-  #   # expression = 'gr1_area < 500'
-  #   expression = 'grain_tracker < 10'
-  # [../]
+  [./term]
+    type = Terminator
+    # expression = 'gr1_area < 500'
+    expression = 'grain_tracker < 10'
+  [../]
 []
 
 [ICs]
@@ -214,12 +210,8 @@ my_ct1_mob = 6.4e-13 # 6.4e-13
     section_name = "Root"
     data_type = total
   [../]
-  # [./bnd_length]
-  #   type = GrainBoundaryArea
-  # [../]
-  [./gr1_area]
-    type = ElementIntegralVariablePostprocessor
-    variable = gr5
+  [./bnd_length]
+    type = GrainBoundaryArea
   [../]
 []
 
@@ -250,12 +242,12 @@ my_ct1_mob = 6.4e-13 # 6.4e-13
   # dtmax = 1.0
 
   start_time = 0.0
-  end_time = 1e3
-  # num_steps = 6
+  # end_time = 5.0e3 # 5.0e3
+  num_steps = 11
 
   [./TimeStepper]
     type = IterationAdaptiveDT
-    dt = 0.01
+    dt = 0.5
     growth_factor = 1.2
     cutback_factor = 0.8
     optimal_iterations = 8
@@ -276,9 +268,10 @@ my_ct1_mob = 6.4e-13 # 6.4e-13
     additional_execute_on = 'FINAL'
   [../]  
   [my_exodus]
-    file_base = ./ex_${my_filename}/out_${my_filename} 
+    file_base = ./ex_${my_filename2}/out_${my_filename} 
     interval = 5
     type = Nemesis
+    additional_execute_on = 'FINAL'
   [../]
   [./csv]
     file_base = ./csv_${my_filename}/out_${my_filename}
