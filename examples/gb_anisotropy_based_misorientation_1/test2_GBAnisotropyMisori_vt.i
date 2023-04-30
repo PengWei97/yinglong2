@@ -1,9 +1,8 @@
-# 本脚本用于对自定义 GBAnisotropyMisori 模型的测试
-# 相比于原有的GBAnisotropy, GBAnisotropyMisori是基于GrainTracker构建
-# 功能1: 基于欧拉角所计算的取向差来实时GB energe and mobiity；
-# 功能2: 在每个正交点处，sigam_ij and mob_ij都不相同；
-# 功能3：GBAnisotropy中考虑的孪晶的低能和低迁移率特性；
-
+# This script is used to test the custom GBAnisotropyMisori model
+# Compared with the original GBAnisotropy, GBAnisotropyMisori is based on GrainTracker
+# Function 1: Real-time GB energy and mobility based on the misorientation calculated by the Euler angle;
+# Function 2: At each orthogonal point, sigam_ij and mob_ij are different;
+# Function 3: Low-energy and low-mobility properties of twins considered in GBAnisotropy;
 
 my_filename = "gbAnisotropyMisori_vt3_1"
 
@@ -15,20 +14,22 @@ my_interval = 5
   [./CuGrGranisotropic]
     type = GBAnisotropyMisori
     T = 973.15 # K
-    wGB = 2.0
+    wGB = 1.0
+  
+    GBsigma_HAGB = 0.9565
+    GBmob_HAGB = 6.0e-13
 
-    sigma_matrix = 0.708
-    GBsigma_HAGB = 0.708
-    GBmob_HAGB = 2.4e-12
-    mob_matrix = ${my_mob_matrix}
+    TT1_sigma = 0.276 # 0.1019 0.3109 0.276
+    CT1_sigma = 0.291 # 0.0616 0.1848 0.291
+    TT1_mob = 6.0e-13
+    CT1_mob = 6.0e-13
 
-    grain_tracker = grain_tracker
-    euler_angle_provider = euler_angle_file
+    euler_angle_provider = ebsd_reader
 
-    gb_energy_anisotropy = false
+    gb_energy_anisotropy = true
     gb_mobility_anisotropy = true
 
-    output_properties = 'kappa_op gamma_asymm L mu misori_angle twinning_type mob_00' #  
+    output_properties = 'kappa_op L mu misori_angle twinning_type'
     outputs = my_exodus
   [../]
 []
@@ -116,47 +117,7 @@ my_interval = 5
   [./euler_angle]
     order = CONSTANT
     family = MONOMIAL
-  [../]  
-  [mob_00]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_01]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_02]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_03]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_04]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_10]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_11]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_12]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_13]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [mob_14]
-    order = CONSTANT
-    family = MONOMIAL
-  []
+  [../]
 []
 
 [Kernels]
@@ -190,67 +151,7 @@ my_interval = 5
     euler_angle_provider = euler_angle_file
     grain_tracker = grain_tracker
     output_euler_angle = 'phi1'
-  [../]
-  [mob_00]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 0
-    variable = mob_00
-  [] 
-  [mob_01]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 1
-    variable = mob_01
-  []   
-  [mob_02]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 2
-    variable = mob_02
-  []   
-  [mob_03]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 3
-    variable = mob_03
-  []   
-  [mob_04]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 4
-    variable = mob_04
-  []  
-  [mob_10]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 5
-    variable = mob_10
-  [] 
-  [mob_11]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 6
-    variable = mob_11
-  []   
-  [mob_12]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 7
-    variable = mob_12
-  []   
-  [mob_13]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 8
-    variable = mob_13
-  []   
-  [mob_14]
-    type = MaterialStdVectorAux
-    property = mob_ij
-    index = 9
-    variable = mob_14
-  []    
+  [../] 
 []
 
 [Postprocessors]
@@ -274,13 +175,13 @@ my_interval = 5
   [../] 
 []
 
-# [VectorPostprocessors]
-#   [./grain_volumes] 
-#     type = FeatureDataVectorPostprocessor
-#     flood_counter = grain_tracker
-#     # output_centroids = true
-#   [../]
-# []
+[VectorPostprocessors]
+  [./grain_volumes] 
+    type = FeatureDataVectorPostprocessor
+    flood_counter = grain_tracker
+    output_centroids = true
+  [../]
+[]
 
 [Executioner]
   type = Transient
@@ -325,7 +226,7 @@ my_interval = 5
   [../]
   [./csv]
     file_base = ./csv_${my_filename}/out_${my_filename}
-    # interval = 5
+    interval = ${my_interval}
     type = CSV
   [../]
   print_linear_residuals = false

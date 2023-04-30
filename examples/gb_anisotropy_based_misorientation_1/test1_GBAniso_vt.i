@@ -1,4 +1,4 @@
-# 本脚本用于运行和学习自带GBAnisotropy模型的构建
+# This script is used to run and learn the construction of the built-in GBAnisotropy model
 
 my_filename = "gbAnisotropy_vt"
 
@@ -191,10 +191,10 @@ my_filename = "gbAnisotropy_vt"
     # interval = 5
     type = Nemesis
   [../]
-  # [./csv]
-  #   file_base = ./csv_${my_filename}/out_${my_filename}
-  #   # interval = 5
-  #   type = CSV
-  # [../]
+  [./csv]
+    file_base = ./csv_${my_filename}/out_${my_filename}
+    # interval = 5
+    type = CSV
+  [../]
   print_linear_residuals = false
 []

@@ -15,14 +15,12 @@ my_interval = 5
     type = GBAnisotropyMisori
     T = 973.15 # K
     wGB = 1.0
-
+  
     GBsigma_HAGB = 0.9565
-    sigma_matrix = 0.9565 # TODO
-    GBmob_HAGB = 2.4e-12
-    mob_matrix = ${my_mob_matrix}
+    GBmob_HAGB = 6.0e-13
 
-    TT1_sigma = 0.1019
-    CT1_sigma = 0.0616
+    TT1_sigma = 0.276 # 0.1019 0.3109 0.276
+    CT1_sigma = 0.291 # 0.0616 0.1848 0.291
     TT1_mob = ${my_tt1_mob}
     CT1_mob = ${my_ct1_mob}
 
@@ -31,7 +29,7 @@ my_interval = 5
     gb_energy_anisotropy = true
     gb_mobility_anisotropy = true
 
-    output_properties = 'kappa_op gamma_asymm L mu misori_angle twinning_type mob_00' #  
+    output_properties = 'kappa_op L mu misori_angle twinning_type'
     outputs = my_exodus
   [../]
 []
@@ -40,7 +38,7 @@ my_interval = 5
   [ebsd_mesh]
     type = EBSDMeshGenerator
     # EBSD Data with GNDs during isothermal annealing with GNDs at 700℃ 
-    filename = debug_loc3_tw1_10min_Ti700_rho.inl
+    filename = input_loc3_tw1_10min_Ti700_rho.inl
   []
   parallel_type = distributed
 []
@@ -83,10 +81,6 @@ my_interval = 5
     euler_angle_provider = ebsd_reader
     
   [../]
-  # [./term]
-  #   type = Terminator
-  #   expression = 'gr1_area < 1e3'
-  # [../]
 []
 
 [ICs]
@@ -270,7 +264,7 @@ my_interval = 5
   [../]
   [./csv]
     file_base = ./csv_${my_filename1}/out_${my_filename}
-    # interval = 5
+    interval = ${my_interval}
     type = CSV
   [../]
   print_linear_residuals = false
