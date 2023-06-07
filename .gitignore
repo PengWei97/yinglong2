@@ -110,6 +110,12 @@ compile_commands.json
 build
 **/libtorch
 
+# ignored neper files
+*.msh
+*.stelset
+*.stnode
+*.tess
+
 # Allow certain files in gold directories
 !**/gold/*.e
 !**/gold/*.e-s*

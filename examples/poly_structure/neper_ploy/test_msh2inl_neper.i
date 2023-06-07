@@ -1,7 +1,7 @@
 # 本脚本用于测试从neper创建的微结构msh创建inl文件的可行性
 
-my_filename = "test1_14"
-my_filename2 = "test1_14"
+my_filename = "test1_14_a"
+my_filename2 = "test1_14_a2"
 
 my_tt1_mob = 1.28e-13 # 3.0e-14
 my_ct1_mob = 1.70e-13 # 6.4e-13
@@ -10,7 +10,7 @@ my_ct1_mob = 1.70e-13 # 6.4e-13
   [./CuGrGranisotropic]
     type = GBAnisotropyMisori
     T = 973.15 # K
-    wGB = 0.1
+    wGB = 1.0
   
     GBsigma_HAGB = 0.9565
     GBmob_HAGB = 6.0e-13
@@ -73,9 +73,8 @@ my_ct1_mob = 1.70e-13 # 6.4e-13
 
     execute_on = 'INITIAL TIMESTEP_BEGIN'
 
-    merge_grains_based_misorientaion = false
+    merge_grains_based_misorientaion = true
     euler_angle_provider = ebsd_reader
-    
   [../]
 []
 
@@ -219,7 +218,7 @@ my_ct1_mob = 1.70e-13 # 6.4e-13
   # dtmax = 1.0
 
   start_time = 0.0
-  end_time = 1.0e3
+  end_time = 6.0e3
   # num_steps = 10
 
   [./TimeStepper]
