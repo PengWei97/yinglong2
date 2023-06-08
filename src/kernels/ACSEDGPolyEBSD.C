@@ -57,7 +57,7 @@ ACSEDGPolyEBSD::computeDFDOP(PFFunctionType type)
   unsigned int num_vaild_grain = 0;
   for (MooseIndex(op_to_grain) op_index = 0; op_index < op_to_grain.size(); ++op_index)
   {
-    auto grain_id = op_to_grain[op_index];
+
     if (op_to_grain[op_index] == FeatureFloodCount::invalid_id)
       continue;
 
