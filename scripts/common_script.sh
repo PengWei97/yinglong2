@@ -4,4 +4,12 @@
 
 # METHOD=dbg make -j30
 
+# mpiexec -n 30 ~/projects/yinglong/yinglong-dbg -i polycrystal_2.i --stop-for-debugger 
+# --start-in-debugger='gdb'
+
 # gdb ~/projects/yinglong/yinglong-opt -i inputfile.i
+
+# mamba activate moose
+# mamba update --all
+# make clobberall
+# make -j30
