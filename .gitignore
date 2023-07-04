@@ -1,5 +1,5 @@
 *.tgz
-case*.inl
+*.inl
 local*.inl
 bm*.i
 *.bz2
