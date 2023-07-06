@@ -13,3 +13,6 @@
 # mamba update --all
 # make clobberall
 # make -j30
+
+mv /home/pw-moose/projects/yinglong/src/materials/crystal_plasticity/CrystalPlasticityFatigue.C /home/pw-moose/projects/yinglong/src/materials/crystal_plasticity/CrystalPlasticityFatigueCubic.C
+mv /home/pw-moose/projects/yinglong/include/materials/crystal_plasticity/CrystalPlasticityFatigue.h /home/pw-moose/projects/yinglong/include/materials/crystal_plasticity/CrystalPlasticityFatigueCubic.h
