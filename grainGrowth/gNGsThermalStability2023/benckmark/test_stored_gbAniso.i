@@ -36,7 +36,7 @@ my_ct1_mob = 1.70e-13 # 6.4e-13
   [../]
   [./deformed]
     type = DeformedGrainEBSDMaterial
-    stored_factor = 0.5
+    stored_factor = 5.0
     GNDs_provider = ebsd_reader
     output_properties = 'rho_eff'
     outputs = my_exodus
