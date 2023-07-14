@@ -1,3 +1,6 @@
+*.err
+*.pov
+Ti*.inl
 *.tgz
 *.inl
 local*.inl

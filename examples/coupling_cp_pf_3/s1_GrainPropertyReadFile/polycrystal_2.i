@@ -1,5 +1,8 @@
 # 晶体塑性+多晶 -- voronoi
-# 问题：没有解决网格自适应+分布式网格+状态变量的问题，需要合并
+# 问题1：没有解决网格自适应+分布式网格+状态变量的问题，需要合并
+# [Stephanie Pitts](https://github.com/sapitts)
+# [dewenyushu](https://github.com/dewenyushu)
+# 
 
 my_filename = "test2"
 my_filename2 = "test2"
@@ -222,7 +225,7 @@ my_filename2 = "test2"
     # public CrystalPlasticityStressUpdateBase 
     # an interative predictor-corrector algorithm
     # Backward Euler integration rule is used for the rate equations.
-    type = CrystalPlasticityKalidindiUpdate # the specific constitutive crystal plasticity model  Crystal Plasticity Kalidindi Update
+    type = CrystalPlasticityKalidindiUpdate # the specific constitutive crystal plasticity model, Crystal-Plasticity-Kalidindi-Update
     crystal_lattice_type = FCC
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys.txt
