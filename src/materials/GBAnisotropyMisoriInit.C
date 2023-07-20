@@ -145,7 +145,9 @@ GBAnisotropyMisoriInit::calculatedGBEnergy(const MisorientationAngleData & misor
   // transition misorientation angle between low and high-angle grain boundary
   Real trans_misori_HAGB = 15.0;
 
-  if (_misori_s._misor <= trans_misori_HAGB)
+  if (_misori_s._misor <= 1.0)
+    gbSigma = _GBsigma_HAGB * _rate2_HABvsLAB_sigma;
+  else if (_misori_s._misor <= trans_misori_HAGB)
     gbSigma = _GBsigma_HAGB * (_rate1_HABvsLAB_sigma * (misori_s._misor / trans_misori_HAGB * (1 - std::log(misori_s._misor / trans_misori_HAGB))) + _rate2_HABvsLAB_sigma);
   else
     gbSigma = _GBsigma_HAGB * (_rate1_HABvsLAB_sigma * (trans_misori_HAGB / trans_misori_HAGB * (1 - std::log(trans_misori_HAGB / trans_misori_HAGB))) + _rate2_HABvsLAB_sigma);
@@ -166,7 +168,9 @@ GBAnisotropyMisoriInit::calculatedGBMobility(const MisorientationAngleData & mis
   Real B = 5;
   Real n = 4;
   
-  if (_misori_s._misor <= trans_misori_HAGB)
+  if (_misori_s._misor <= 1.0)
+    gbMob = _GBmob_HAGB *_rate2_HABvsLAB_mob;
+  else if (_misori_s._misor <= trans_misori_HAGB)
     gbMob = _GBmob_HAGB * (_rate1_HABvsLAB_mob * (1- std::exp(-B * std::pow( misori_s._misor / trans_misori_HAGB, n))) + _rate2_HABvsLAB_mob); // Eq.8
   else
     gbMob =  _GBmob_HAGB * (_rate1_HABvsLAB_mob * (1- std::exp(-B * std::pow(trans_misori_HAGB / trans_misori_HAGB, n))) + _rate2_HABvsLAB_mob); // Eq.8
