@@ -1,7 +1,5 @@
 *.tgz
-case*.inl
-local*.inl
-bm*.i
+*.inl
 *.bz2
 job*.sh
 .libs
