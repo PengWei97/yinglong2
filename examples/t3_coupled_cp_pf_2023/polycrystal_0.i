@@ -1,22 +1,25 @@
-# 晶体塑性+多晶 -- voronoi
-# 问题1：没有解决网格自适应+分布式网格+状态变量的问题，需要合并
-# [Stephanie Pitts](https://github.com/sapitts)
-# [dewenyushu](https://github.com/dewenyushu)
-# 
+# t1_n200_tensile, 没有采用网格自适应, doing
+# t2_n200_tensile, 采用网格自适应, TODO
 
-my_filename = "test2"
-my_filename2 = "test2"
+# t1_n200_fatigue, 没有采用网格自适应, TODO
+# t2_n200_fatigue, 采用网格自适应, TODO
+
+# TODO
+# 1. https://mooseframework.inl.gov/application_development/profiling.html - Profiling MOOSE code
+
+
+my_filename = "t1_n200_tensile"
+my_filename2 = "t1_n200_tensile"
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
   elem_type = QUAD4
-  displacements = 'disp_x disp_y'
   nx = 100
   ny = 100
-  xmax = 0.21
-  ymax = 0.21
-  parallel_type = distributed  
+  xmax = 100
+  ymax = 100
+  parallel_type = distributed
 []
 
 [GlobalParams]
@@ -25,13 +28,12 @@ my_filename2 = "test2"
 
 [UserObjects]
   [./prop_read]
-    type = PropertyReadFile 
+    type = PropertyReadFile # PropertyReadFile ElementPropertyReadFile
     # need read
-    prop_file_name = 'input_file_2.txt'
-    # Enter file data as prop#1, prop#2, .., prop#nprop
+    prop_file_name = 'euler_ang_test_200.inp'
     nprop = 3
     read_type = voronoi
-    nvoronoi = 50
+    nvoronoi = 200
     use_random_voronoi = true
     rand_seed = 100
     rve_type = periodic
@@ -83,6 +85,7 @@ my_filename2 = "test2"
     order = CONSTANT
     family = MONOMIAL
   [../]
+
   [./euler1]
     order = CONSTANT
     family = MONOMIAL
@@ -204,7 +207,7 @@ my_filename2 = "test2"
     type = FunctionDirichletBC
     variable = disp_y
     boundary = top
-    function = '0.001*t'
+    function = '0.1*t'
   [../]
 []
 
@@ -219,16 +222,17 @@ my_filename2 = "test2"
     type = ComputeMultipleCrystalPlasticityStress
     crystal_plasticity_models = 'trial_xtalpl'
     tan_mod_type = exact
-    maximum_substep_iteration = 100
+    
+    
   [../]
   [./trial_xtalpl]
-    # public CrystalPlasticityStressUpdateBase 
-    # an interative predictor-corrector algorithm
-    # Backward Euler integration rule is used for the rate equations.
-    type = CrystalPlasticityKalidindiUpdate # the specific constitutive crystal plasticity model, Crystal-Plasticity-Kalidindi-Update
+    type = CrystalPlasticityKalidindiUpdate
     crystal_lattice_type = FCC
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys.txt
+    # slip_increment_tolerance = 0.1 # 2e-2, Maximum allowable slip in an increment for each individual constitutive model
+    # resistance_tol = 5.0e-2 # 2e-2, Constitutive slip system resistance relative residual tolerance for each individual constitutive model
+    # rtol = 1e-6 # Constitutive stress residual relative tolerance
   [../]
 []
 
@@ -244,7 +248,6 @@ my_filename2 = "test2"
     section_name = "Root"
     data_type = total
   [../]
-    
   [./stress_yy]
     type = ElementAverageValue
     variable = stress_yy
@@ -280,36 +283,32 @@ my_filename2 = "test2"
 
 [Executioner]
   type = Transient
-  # dt = 0.05
-
-  # Preconditioned JFNK (default)
   solve_type = 'PJFNK'
 
-  # petsc_options_iname = '-pc_type -pc_hypre_type'
-  # petsc_options_value = 'lu boomerang'
-
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'lu'
+  petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -ksp_type -ksp_gmres_restart'
+  petsc_options_value = ' asm      2              lu            gmres     200'
   nl_abs_tol = 1e-10
-  nl_rel_step_tol = 1e-10
-  dtmax = 10.0
   nl_rel_tol = 1e-10
-  end_time = 100
-  # num_steps = 10
   nl_abs_step_tol = 1e-10
+
+  start_time = 0.0
+  end_time = 100
+  
+  # num_steps = 10
+  # nl_abs_step_tol = 1e-10
 
   [./TimeStepper]
     type = IterationAdaptiveDT
-    dt = 0.001 # Initial time step.  In this simulation it changes.
+    dt = 0.01 # Initial time step.  In this simulation it changes.
     optimal_iterations = 6 # Time step will adapt to maintain this number of nonlinear iterations
   [../]
-  [./Adaptivity]
-    # Block that turns on mesh adaptivity. Note that mesh will never coarsen beyond initial mesh (before uniform refinement)
-    initial_adaptivity = 2 # Number of times mesh is adapted to initial condition
-    refine_fraction = 0.7 # Fraction of high error that will be refined
-    coarsen_fraction = 0.1 # Fraction of low error that will coarsened
-    max_h_level = 4 # Max number of refinements used, starting from initial mesh (before uniform refinement)
-  [../]
+  # [./Adaptivity]
+  #   # Block that turns on mesh adaptivity. Note that mesh will never coarsen beyond initial mesh (before uniform refinement)
+  #   initial_adaptivity = 2 # Number of times mesh is adapted to initial condition
+  #   refine_fraction = 0.7 # Fraction of high error that will be refined
+  #   coarsen_fraction = 0.1 # Fraction of low error that will coarsened
+  #   max_h_level = 4 # Max number of refinements used, starting from initial mesh (before uniform refinement)
+  # [../]
 []
 
 [Outputs]
