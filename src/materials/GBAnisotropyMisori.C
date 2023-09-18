@@ -22,6 +22,10 @@ GBAnisotropyMisori::validParams()
   params.addParam<Real>("CT1_sigma",  0.9, "Twin boundary energy for {11-22} compresssion twin (type 1) based on MD, J/m^2");  
   params.addParam<Real>("TT1_mob", 2.5e-6, "Twin boundary mobility for {10-12} tensile twin (type 1) based on experiment, m^4/(J*s)");
   params.addParam<Real>("CT1_mob", 2.5e-6, "Twin boundary mobility for {11-22} compresssion twin (type 1) based on experiment, m^4/(J*s)");
+  params.addParam<Real>("Sigma9_sigma",  0.9, "Twin boundary energy for {10-12} tensile twin (type 1) based on MD, J/m^2");
+  params.addParam<Real>("Sigma3_sigma",  0.9, "Twin boundary energy for {11-22} compresssion twin (type 1) based on MD, J/m^2");  
+  params.addParam<Real>("Sigma9_mob", 2.5e-6, "Twin boundary mobility for {10-12} tensile twin (type 1) based on experiment, m^4/(J*s)");
+  params.addParam<Real>("Sigma3_mob", 2.5e-6, "Twin boundary mobility for {11-22} compresssion twin (type 1) based on experiment, m^4/(J*s)");
   params.addRequiredParam<UserObjectName>(
       "grain_tracker", "Name of GrainTracker user object that provides Grain ID according to element ID");
   params.addRequiredParam<UserObjectName>("euler_angle_provider",
@@ -39,6 +43,10 @@ GBAnisotropyMisori::GBAnisotropyMisori(const InputParameters & parameters)
     _CT1_sigma(getParam<Real>("CT1_sigma")),
     _TT1_mob(getParam<Real>("TT1_mob")),
     _CT1_mob(getParam<Real>("CT1_mob")),
+    _Sigma3_sigma(getParam<Real>("Sigma3_sigma")),
+    _Sigma9_sigma(getParam<Real>("Sigma9_sigma")),
+    _Sigma3_mob(getParam<Real>("Sigma3_mob")),
+    _Sigma9_mob(getParam<Real>("Sigma9_mob")),
     _grain_tracker(getUserObject<GrainTracker>("grain_tracker")),
     _euler(getUserObject<EulerAngleProvider>("euler_angle_provider")),
     _gb_energy_anisotropy(getParam<bool>("gb_energy_anisotropy")),
@@ -93,7 +101,7 @@ GBAnisotropyMisori::computeGBProperties()
         auto & _mob_ij = _mob[var_index[i]][var_index[j]];
 
         // calculate misorientation angle
-        _misori_s = MisorientationAngleCalculator::calculateMisorientaion(angles_i, angles_j, _misori_s);
+        _misori_s = MisorientationAngleCalculator::calculateMisorientaion(angles_i, angles_j, _misori_s, CrystalType::FCC);
 
         if (_gb_energy_anisotropy)
           _sigma_ij = calculatedGBEnergy(_misori_s);
@@ -113,10 +121,14 @@ GBAnisotropyMisori::computeGBProperties()
         {
           _misori_angle[_qp] =  _misori_s._misor;
 
-          if (_misori_s._is_twin && (_misori_s._twin_type == TwinType::TT1))
+          if (_misori_s._is_twin && (_misori_s._twin_type == TwinType::TT1_HCP))
             _twinning_type[_qp] = 1.0;
-          else if (_misori_s._is_twin && (_misori_s._twin_type == TwinType::CT1))
+          else if (_misori_s._is_twin && (_misori_s._twin_type == TwinType::CT1_HCP))
             _twinning_type[_qp] = 2.0;
+          if (_misori_s._is_twin && (_misori_s._twin_type == TwinType::Sigma3_FCC))
+            _twinning_type[_qp] = 3.0;
+          else if (_misori_s._is_twin && (_misori_s._twin_type == TwinType::Sigma9_FCC))
+            _twinning_type[_qp] = 4.0;
           else
             _twinning_type[_qp] = 0.0; // GB
 
@@ -165,21 +177,25 @@ GBAnisotropyMisori::calculatedGBEnergy(const MisorientationAngleData & misori_s)
   // transition misorientation angle between low and high-angle grain boundary
   Real trans_misori_angle_HAGB = 15.0;
 
-  if ((_misori_s._misor <= 2.0) && !misori_s._is_twin)
+  if ((_misori_s._misor <= 1.0) && !misori_s._is_twin)
     gbSigma = _GBsigma_HAGB * ((2.0 / trans_misori_angle_HAGB * (1 - std::log(2.0 / trans_misori_angle_HAGB))));    
   else if ((_misori_s._misor <= trans_misori_angle_HAGB) && !misori_s._is_twin)
     gbSigma = _GBsigma_HAGB * ((misori_s._misor / trans_misori_angle_HAGB * (1 - std::log(misori_s._misor / trans_misori_angle_HAGB))));
   else if (misori_s._is_twin)
   {
-    if (misori_s._twin_type == TwinType::TT1)
+    if (misori_s._twin_type == TwinType::TT1_HCP)
       gbSigma = _TT1_sigma;
-    else if (misori_s._twin_type == TwinType::CT1)
+    else if (misori_s._twin_type == TwinType::CT1_HCP)
       gbSigma = _CT1_sigma;
+    else if (misori_s._twin_type == TwinType::Sigma3_FCC)
+      gbSigma =  _Sigma3_sigma;
+    else if (misori_s._twin_type == TwinType::Sigma9_FCC)
+      gbSigma =  _Sigma9_sigma;
   }
 
   return gbSigma; 
 }
-
+ 
 Real
 GBAnisotropyMisori::calculatedGBMobility(const MisorientationAngleData & misori_s)
 {
@@ -193,16 +209,20 @@ GBAnisotropyMisori::calculatedGBMobility(const MisorientationAngleData & misori_
   Real B = 5;
   Real n = 4;
   
-  if ((_misori_s._misor <= 2.0) && !misori_s._is_twin)
+  if ((_misori_s._misor <= 1.0) && !misori_s._is_twin)
     gbMob = _GBmob_HAGB * ((1- std::exp(-B * std::pow( 2.0 / trans_misori_angle_HAGB, n)))); // Eq.8    
   else if ((_misori_s._misor <=  trans_misori_angle_HAGB) && !misori_s._is_twin )
     gbMob = _GBmob_HAGB * ((1- std::exp(-B * std::pow( misori_s._misor / trans_misori_angle_HAGB, n)))); // Eq.8
   else if (misori_s._is_twin)
   {
-    if (misori_s._twin_type == TwinType::TT1)
+    if (misori_s._twin_type == TwinType::TT1_HCP)
       gbMob = _TT1_mob;
-    else if (misori_s._twin_type == TwinType::CT1)
+    else if (misori_s._twin_type == TwinType::CT1_HCP)
       gbMob = _CT1_mob;
+    else if (misori_s._twin_type == TwinType::Sigma3_FCC)
+      gbMob = _Sigma3_mob;
+    else if (misori_s._twin_type == TwinType::Sigma9_FCC)
+      gbMob = _Sigma9_mob;
   }
 
   return gbMob;

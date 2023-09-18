@@ -43,10 +43,17 @@ protected:
   // used to store orientation structure, including misorientation angle, istwinnig, twinning type;
   MisorientationAngleData _misori_s;
   
+  // for HCP_Ti
   const Real _TT1_sigma;
   const Real _CT1_sigma;
   const Real _TT1_mob;
   const Real _CT1_mob;
+
+  // for FCC_Ni
+  const Real _Sigma3_sigma;
+  const Real _Sigma9_sigma;
+  const Real _Sigma3_mob;
+  const Real _Sigma9_mob;
 
   const GrainTracker & _grain_tracker;
   const EulerAngleProvider & _euler; 
