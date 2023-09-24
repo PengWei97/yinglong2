@@ -1,21 +1,24 @@
-# t1_n200_neper - 没有采用网格自适应技术
-# t2_n200_tensile - 不采用网格自适应技术，拉伸加载
+# t2_n200_tensile_v0: not considering backstress in CP model
+# t2_n200_tensile_v1: backstress parameters: 1.0e1, 1.0e-1 - normal exection
+# t2_n200_tensile_v2: backstress parameters: 1.0e2, 1.0 - the calculation does not converge and there are nan values.
 
+my_c_backstress = 1.0e2
+my_d_backstress = 1.0
 
-my_filename = "t2_n200_tensile"
-my_filename2 = "t2_n200_tensile"
+my_filename = "t2_n200_tensile_v5"
+my_filename2 = "t2_n200_tensile_v5"
 
 [Functions]
   [./cycle_load]
     type = ParsedFunction
-    value = '0.1*t' # 0.1%
+    expression = '0.1*t' # 0.1% 0.1*t 0.1*sin(2*pi*t)
   [../]
 []
 
 [Mesh]
   [./nepermesh]
     type = FileMeshGenerator
-    file = n200-id1_3.msh
+    file = n200-id1_v2.msh
   [../]
   [./left_modifier]
     type = BoundingBoxNodeSetGenerator
@@ -92,6 +95,10 @@ my_filename2 = "t2_n200_tensile"
    order = CONSTANT
    family = MONOMIAL
   [../]
+  [./tau_b]
+   order = CONSTANT
+   family = MONOMIAL
+  [../]
   [./stress_yy]
     order = CONSTANT
     family = MONOMIAL
@@ -157,7 +164,13 @@ my_filename2 = "t2_n200_tensile"
    index = 0
    execute_on = timestep_end
   [../]
-
+  [./tau_b]
+   type = MaterialStdVectorAux
+   variable = tau_b
+   property = tau_b
+   index = 0
+   execute_on = timestep_end
+  [../]
   [./stress_yy]
     type = RankTwoAux
     variable = stress_yy
@@ -239,13 +252,28 @@ my_filename2 = "t2_n200_tensile"
     tan_mod_type = exact
     rtol = 1e-6 # Constitutive stress residual relative tolerance
     maxiter_state_variable = 100 # Maximum number of iterations for stress update
-    maximum_substep_iteration = 1 # Maximum number of substep iteration
+
+    maximum_substep_iteration = 10 # Maximum number of substep iteration
+
+    use_line_search = true
   [../]
   [./trial_xtalpl]
-    type = CrystalPlasticityKalidindiUpdate
-    crystal_lattice_type = FCC
-    number_slip_systems = 12
-    slip_sys_file_name = input_slip_sys.txt
+    type = CrystalPlasticityKalidindiBackstress # CrystalPlasticityKalidindiUpdate
+    crystal_lattice_type = FCC # BCC FCC HCP
+    number_slip_systems = 12 
+    slip_sys_file_name = input_slip_sys.inp
+    number_cross_slip_directions = 0
+    number_cross_slip_planes = 0
+
+    slip_increment_tolerance = 0.1 # 2e-2, Maximum allowable slip in an increment for each individual constitutive model
+    stol = 1e-2 # Constitutive internal state variable relative change tolerance
+    resistance_tol = 0.1 # 2e-2, Con
+    zero_tol = 1e-12 # Tolerance for residual check when variable value is zero for each individual constitutive model
+    print_state_variable_convergence_error_messages = true
+
+    # https://www.sciencedirect.com/science/article/pii/S0921509317300898
+    c_backstress = ${my_c_backstress} # 1.0e1 # 7.56e4 1e4
+    d_backstress = ${my_d_backstress} # 1.0e-1 # 7.20e2 1e2
   [../]
 []
 
@@ -285,6 +313,10 @@ my_filename2 = "t2_n200_tensile"
    type = ElementAverageValue
    variable = slip_increment
   [../]
+  [./backstress]
+    type = ElementAverageValue
+    variable = tau_b
+  [../]
 []
 
 [Preconditioning]
@@ -304,19 +336,20 @@ my_filename2 = "t2_n200_tensile"
   nl_rel_tol = 1e-10
   nl_abs_step_tol = 1e-10
 
-  l_max_its = 10 # Max number of linear iterations
-  nl_max_its = 8 # Max number of nonlinear iterations
+  # l_max_its = 30 # Max number of linear iterations
+  nl_max_its = 20 # Max number of nonlinear iterations
 
   start_time = 0.0
-  end_time = 400
+  end_time = 5
   # num_steps = 5
-  # dt = 0.01
+  dt = 0.1
   dtmin = 0.1e-6
 
   [./TimeStepper]
     type = IterationAdaptiveDT
     dt = 0.1 # Initial time step.  In this simulation it changes.
-    optimal_iterations = 6 # Time step will adapt to maintain this number of nonlinear iterations
+    optimal_iterations = 30 # Time step will adapt to maintain this number of nonlinear iterations
+    iteration_window = 5
   [../]
   # [./Adaptivity]
   #   # Block that turns on mesh adaptivity. Note that mesh will never coarsen beyond initial mesh (before uniform refinement)
@@ -328,6 +361,12 @@ my_filename2 = "t2_n200_tensile"
 []
 
 [Outputs]
+  [./my_checkpoint]
+    file_base = ./${my_filename}/out_${my_filename}
+    # interval = 5
+    type = Checkpoint
+    additional_execute_on = 'FINAL'
+  [../]
   [my_exodus]
     file_base = ./ex_${my_filename2}/out_${my_filename} 
     # interval = 5
@@ -341,3 +380,17 @@ my_filename2 = "t2_n200_tensile"
   [../]
   print_linear_residuals = false
 []
+
+# t1_n200_tensile, 没有采用网格自适应, 不收敛
+
+# t2_n200_tensile_v0, 没有采用网格自适应, neper: 算3s需要1.16h (completed). n200-id1_v2.msh
+# t2_n200_tensile_v1, 没有采用网格自适应, neper, 修改materials的某些参数, 计算效率可以: 算10s需要0.43h (completed - good)
+# t2_n200_tensile_v1_msh05, 细化网格, 很慢
+# t2_n200_tensile_v2, 采用网格自适应, neper, 修改materials的某些参数: 计算很慢，算0.35s需要0.52h (completed)
+# t2_n200_tensile_v3, 基于t2_n200_tensile_v1，没有考虑backstress，计算到3.35
+# t2_n200_tensile_v4, 基于t2_n200_tensile_v1，没有考虑backstress，计算到5.0 running
+  # v4_1: 0.1e1, 0.1e-3，结果和原始的曲线一样
+  # v4_2: 1.0, 0.1e-2，结果和原始的曲线一样
+  # v4_3: 1.0, 1.0e-2，结果和原始的曲线一样
+  # v4_4: 1.0e1, 1.0e-1，结果和原始轻微不同, t2_n200_tensile_v4_4
+  # v4_5: 1.0e2, 1.0，结果和原始的曲线一样, 
